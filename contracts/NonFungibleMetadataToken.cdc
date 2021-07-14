@@ -57,6 +57,7 @@ pub contract interface NonFungibleMetadataToken {
         pub fun getDescription(): String
         pub fun getSchemas() : [String]
         pub fun resolveSchema(_ schema:String): AnyStruct
+        //TODO: add pre that checks that schame must be in getSchemas
     }
 
     // Requirement that all conforming NFT smart contracts have
