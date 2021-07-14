@@ -1,5 +1,17 @@
-# NonFungibleToken standard proposal
+# NonFungibleMetadataToken - FIP
 
 This is a proposal for a new NFT standard with more fields. 
 
-I have tried adding common NFTs from contracts and see how they will be modified as the standard is modified
+
+This proposal adds a new interface NonFungibleMetadataToken that has the following methods
+
+```
+getName() : String
+getDescription() : String
+getSchemas() : [String]
+resolveSchema(_ schema: String) : AnyStruct
+```
+
+
+I did not add any fields since you cannot upgrade a contract by adding a new field. 
+
