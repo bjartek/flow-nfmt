@@ -47,8 +47,9 @@
 */
 
 import NonFungibleToken from "./../NonFungibleToken.cdc"
+import NonFungibleMetadataToken from "./../NonFungibleMetadataToken.cdc"
 
-pub contract TopShot: NonFungibleToken {
+pub contract TopShot: NonFungibleToken, NonFungibleMetadataToken {
 
     // -----------------------------------------------------------------------
     // TopShot contract Events
@@ -414,7 +415,7 @@ pub contract TopShot: NonFungibleToken {
 
     // The resource that represents the Moment NFTs
     //
-    pub resource NFT: NonFungibleToken.INFT {
+    pub resource NFT: NonFungibleToken.INFT, NonFungibleMetadataToken.INFT {
 
         // Global unique moment ID
         pub let id: UInt64
@@ -432,6 +433,22 @@ pub contract TopShot: NonFungibleToken {
             self.data = MomentData(setID: setID, playID: playID, serialNumber: serialNumber)
 
             emit MomentMinted(momentID: self.id, playID: playID, setID: self.data.setID, serialNumber: self.data.serialNumber)
+        }
+
+        pub fun getName(): String {
+            return self.data.setID.toString().concat("/").concat(self.data.playID.toString())
+        }
+        pub fun getDescription(): String {
+            return ""
+        }
+        pub fun getSchemas() : [String] {
+            return ["dictionary"]
+        }
+        pub fun resolveSchema(_ schema:String): AnyStruct {
+            if schema == "dictionary" {
+                return TopShot.getPlayMetaData(playID: self.data.playID)
+            }
+            panic("cannot resolve unknown schema")
         }
 
         // If the Moment is destroyed, emit an event to indicate 
@@ -543,7 +560,7 @@ pub contract TopShot: NonFungibleToken {
     // Collection is a resource that every user who owns NFTs 
     // will store in their account to manage their NFTS
     //
-    pub resource Collection: MomentCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic { 
+    pub resource Collection: MomentCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, NonFungibleMetadataToken.CollectionPublic { 
         // Dictionary of Moment conforming tokens
         // NFT is a resource type with a UInt64 ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
@@ -671,6 +688,17 @@ pub contract TopShot: NonFungibleToken {
             }
         }
 
+        // FIP: Implemented the new method
+        //borrowNFMT gets a reference to an NFT in the collection
+        // so that the caller can read its metadata and call its methods
+        pub fun borrowNFMT(id: UInt64): &{NonFungibleMetadataToken.INFT}?  {
+             if self.ownedNFTs[id] != nil {
+                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return ref as! &NonFungibleMetadataToken.NFT
+            } else {
+                return nil
+            }
+        }
         // If a transaction destroys the Collection object,
         // All the NFTs contained within are also destroyed!
         // Much like when Damian Lillard destroys the hopes and
