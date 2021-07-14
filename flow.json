@@ -6,6 +6,7 @@
 		}
 	},
 	"contracts": {
+		"NFMTCollection": "./contracts/NFMTCollection.cdc",
 		"NonFungibleToken" : "./contracts/NonFungibleToken.cdc",
 		"NonFungibleMetadataToken" : "./contracts/NonFungibleMetadataToken.cdc",
 		"Evolution" : "./contracts/viv3/Evolution.cdc",
@@ -42,7 +43,8 @@
 				"Art",
 				"Evolution",
 				"TopShot",
-				"ChainmonstersRewards"
+				"ChainmonstersRewards",
+				"NFMTCollection"
 			]
 		}
 	}
