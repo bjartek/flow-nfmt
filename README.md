@@ -7,7 +7,6 @@ This proposal adds a new interface NonFungibleMetadataToken that has the followi
 
 ```
 getName() : String
-getDescription() : String
 getSchemas() : [String]
 resolveSchema(_ schema: String) : AnyStruct
 ```

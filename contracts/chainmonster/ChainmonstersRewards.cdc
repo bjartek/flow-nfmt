@@ -2,9 +2,10 @@
 // Based on the "current" NonFungibleToken standard on Flow.
 // Does not include that much functionality as the only purpose it to mint and store the Presale NFTs.
 
-import NonFungibleToken from 0x1d7e57aa55817448
+import NonFungibleToken from "./../NonFungibleToken.cdc"
+import NonFungibleMetadataToken from "./../NonFungibleMetadataToken.cdc"
 
-pub contract ChainmonstersRewards: NonFungibleToken {
+pub contract ChainmonstersRewards: NonFungibleToken, NonFungibleMetadataToken {
 
     pub var totalSupply: UInt64
 
@@ -86,7 +87,7 @@ pub contract ChainmonstersRewards: NonFungibleToken {
     }
 
 
-    pub resource NFT: NonFungibleToken.INFT {
+    pub resource NFT: NonFungibleToken.INFT, NonFungibleMetadataToken.INFT {
         
         // Global unique NFT ID
         pub let id: UInt64
@@ -103,6 +104,20 @@ pub contract ChainmonstersRewards: NonFungibleToken {
 
             emit NFTMinted(NFTID: self.id, rewardID: rewardID, serialNumber: self.data.serialNumber)
         }
+
+        pub fun getName(): String {
+            return self.data.rewardID.toString().concat("/").concat(self.data.serialNumber.toString())
+        }
+        pub fun getSchemas() : [String] {
+            return ["metadata"]
+        }
+        pub fun resolveSchema(_ schema:String): AnyStruct {
+            if schema == "metadata" {
+                return ChainmonstersRewards.getRewardMetaData(rewardID: self.data.rewardID)
+            }
+            panic("cannot resolve unknown schema")
+        }
+
     }
 
     // This is the interface that users can cast their Reward Collection as
@@ -124,7 +139,7 @@ pub contract ChainmonstersRewards: NonFungibleToken {
     }
 
 
-    pub resource Collection: ChainmonstersRewardCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection: ChainmonstersRewardCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, NonFungibleMetadataToken.CollectionPublic {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
@@ -219,6 +234,18 @@ pub contract ChainmonstersRewards: NonFungibleToken {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
                 return ref as! &ChainmonstersRewards.NFT
+            } else {
+                return nil
+            }
+        }
+
+        // FIP: Implemented the new method
+        //borrowNFMT gets a reference to an NFT in the collection
+        // so that the caller can read its metadata and call its methods
+        pub fun borrowNFMT(id: UInt64): &{NonFungibleMetadataToken.INFT}?  {
+             if self.ownedNFTs[id] != nil {
+                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return ref as! &NonFungibleMetadataToken.NFT
             } else {
                 return nil
             }

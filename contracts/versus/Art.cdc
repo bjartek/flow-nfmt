@@ -110,10 +110,6 @@ pub contract Art: NonFungibleToken, NonFungibleMetadataToken {
             return self.metadata.name
         }
 
-        pub fun getDescription() : String {
-            return self.metadata.description
-        }
-
         pub fun getSchemas() : [String] {
             return ["imageUrl", "metadata"]
         }

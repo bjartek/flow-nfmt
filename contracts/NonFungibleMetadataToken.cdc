@@ -54,7 +54,6 @@ pub contract interface NonFungibleMetadataToken {
         // The unique ID that each NFT has
         pub let id: UInt64
         pub fun getName(): String
-        pub fun getDescription(): String
         pub fun getSchemas() : [String] 
         pub fun resolveSchema(_ schema:String): AnyStruct
         //TODO: add pre that checks that schame must be in getSchemas
@@ -65,9 +64,6 @@ pub contract interface NonFungibleMetadataToken {
     pub resource NFT: INFT, NonFungibleToken.INFT {
         pub let id: UInt64
         pub fun getName(): String
-        //This method might actually be redudant, since lots of nfts do not have this on chain and it can be easily made with getDescription
-        pub fun getDescription(): String
-
         pub fun getSchemas() : [String]         //FIP: should this resolve to nil and be optional if the schema is not registered?
 
         pub fun resolveSchema(_ schema:String): AnyStruct{

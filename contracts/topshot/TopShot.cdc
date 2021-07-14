@@ -438,9 +438,6 @@ pub contract TopShot: NonFungibleToken, NonFungibleMetadataToken {
         pub fun getName(): String {
             return self.data.setID.toString().concat("/").concat(self.data.playID.toString())
         }
-        pub fun getDescription(): String {
-            return ""
-        }
         pub fun getSchemas() : [String] {
             return ["dictionary"]
         }

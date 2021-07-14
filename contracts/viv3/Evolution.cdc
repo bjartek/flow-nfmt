@@ -354,9 +354,6 @@ pub contract Evolution: NonFungibleToken, NonFungibleMetadataToken {
         pub fun getName(): String {
             return self.data.setId.toString().concat("/").concat(self.data.itemId.toString())
         }
-        pub fun getDescription(): String {
-            return ""
-        }
         pub fun getSchemas() : [String] {
             return ["dictionary"]
         }

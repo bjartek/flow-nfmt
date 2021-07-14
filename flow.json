@@ -9,6 +9,7 @@
 		"NonFungibleToken" : "./contracts/NonFungibleToken.cdc",
 		"NonFungibleMetadataToken" : "./contracts/NonFungibleMetadataToken.cdc",
 		"Evolution" : "./contracts/viv3/Evolution.cdc",
+		"ChainmonstersRewards" : "./contracts/chainmonster/ChainmonstersRewards.cdc",
 		"Art" : "./contracts/versus/Art.cdc",
 		"Content" : "./contracts/versus/Content.cdc",
 		"TopShot" : "./contracts/topshot/TopShot.cdc",
@@ -40,7 +41,8 @@
 				"Content",
 				"Art",
 				"Evolution",
-				"TopShot"
+				"TopShot",
+				"ChainmonstersRewards"
 			]
 		}
 	}
