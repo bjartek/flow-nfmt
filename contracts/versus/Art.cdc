@@ -105,6 +105,7 @@ pub contract Art: NonFungibleToken, NonFungibleMetadataToken {
             return contentCollection.content(self.contentId!)!
         }
 
+        // FIP: Adding the methods and how to resolve them
         pub fun getName() : String {
             return self.metadata.name
         }
@@ -127,6 +128,7 @@ pub contract Art: NonFungibleToken, NonFungibleMetadataToken {
             panic("Cannot resolve for unknown schema")
         }
 
+        // FIP:Finished adding the methods
     }
 
  
@@ -140,6 +142,7 @@ pub contract Art: NonFungibleToken, NonFungibleMetadataToken {
     }
 
 
+    // FIP:Added the new interface here
     pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, NonFungibleMetadataToken.CollectionPublic {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
@@ -184,7 +187,9 @@ pub contract Art: NonFungibleToken, NonFungibleMetadataToken {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
-        // borrowNFT gets a reference to an NFT in the collection
+
+        // FIP: Implemented the new method
+        //borrowNFMT gets a reference to an NFT in the collection
         // so that the caller can read its metadata and call its methods
         pub fun borrowNFMT(id: UInt64): &{NonFungibleMetadataToken.INFT}?  {
              if self.ownedNFTs[id] != nil {

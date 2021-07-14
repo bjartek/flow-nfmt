@@ -5,9 +5,10 @@
 */
 
 
-import NonFungibleToken from 0x1d7e57aa55817448
+import NonFungibleToken from "./../NonFungibleToken.cdc"
+import NonFungibleMetadataToken from "./../NonFungibleMetadataToken.cdc"
 
-pub contract Evolution: NonFungibleToken {
+pub contract Evolution: NonFungibleToken, NonFungibleMetadataToken {
 
     // -----------------------------------------------------------------------
     // Evolution contract Events
@@ -330,7 +331,7 @@ pub contract Evolution: NonFungibleToken {
     }
 
     // The resource that represents the Collectible NFT
-    pub resource NFT: NonFungibleToken.INFT {
+    pub resource NFT: NonFungibleToken.INFT, NonFungibleMetadataToken.INFT {
 
         // Global unique Collectible Id
         pub let id: UInt64
@@ -348,6 +349,22 @@ pub contract Evolution: NonFungibleToken {
             self.data = CollectibleData(setId: setId, itemId: itemId, serialNumber: serialNumber)
 
             emit CollectibleMinted(id: self.id, itemId: itemId, setId: setId, serialNumber: self.data.serialNumber)
+        }
+
+        pub fun getName(): String {
+            return self.data.setId.toString().concat("/").concat(self.data.itemId.toString())
+        }
+        pub fun getDescription(): String {
+            return ""
+        }
+        pub fun getSchemas() : [String] {
+            return ["dictionary"]
+        }
+        pub fun resolveSchema(_ schema:String): AnyStruct {
+            if schema == "dictionary" {
+                return Evolution.getItemMetadata(itemId: self.data.itemId)
+            }
+            panic("cannot resolve unknown schema")
         }
 
         // If the Collectible is destroyed, emit an event
@@ -418,7 +435,7 @@ pub contract Evolution: NonFungibleToken {
 
     // Collection is a resource that every user who owns NFTs
     // will store in their account to manage their NFTS
-    pub resource Collection: EvolutionCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+    pub resource Collection: EvolutionCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, NonFungibleMetadataToken.CollectionPublic {
         // Dictionary of Collectible conforming tokens
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
@@ -500,6 +517,18 @@ pub contract Evolution: NonFungibleToken {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
                 return ref as! &Evolution.NFT
+            } else {
+                return nil
+            }
+        }
+
+         // FIP: Implemented the new method
+        //borrowNFMT gets a reference to an NFT in the collection
+        // so that the caller can read its metadata and call its methods
+        pub fun borrowNFMT(id: UInt64): &{NonFungibleMetadataToken.INFT}?  {
+             if self.ownedNFTs[id] != nil {
+                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return ref as! &NonFungibleMetadataToken.NFT
             } else {
                 return nil
             }

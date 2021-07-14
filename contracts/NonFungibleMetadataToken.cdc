@@ -55,7 +55,7 @@ pub contract interface NonFungibleMetadataToken {
         pub let id: UInt64
         pub fun getName(): String
         pub fun getDescription(): String
-        pub fun getSchemas() : [String]
+        pub fun getSchemas() : [String] 
         pub fun resolveSchema(_ schema:String): AnyStruct
         //TODO: add pre that checks that schame must be in getSchemas
     }
@@ -65,17 +65,27 @@ pub contract interface NonFungibleMetadataToken {
     pub resource NFT: INFT, NonFungibleToken.INFT {
         pub let id: UInt64
         pub fun getName(): String
+        //This method might actually be redudant, since lots of nfts do not have this on chain and it can be easily made with getDescription
         pub fun getDescription(): String
-        pub fun getSchemas() : [String]
-        pub fun resolveSchema(_ schema:String): AnyStruct
+
+        pub fun getSchemas() : [String]         //FIP: should this resolve to nil and be optional if the schema is not registered?
+
+        pub fun resolveSchema(_ schema:String): AnyStruct{
+            pre {
+                !self.getSchemas().contains(schema)  : "Must be a valid schema for this NFMT"
+            }
+        }
+
     }
 
     // Interface that an account would commonly 
     // publish for their collection
     pub resource interface CollectionPublic {
+        //TODO: Should this return INFT or NFT?
         pub fun borrowNFMT(id: UInt64): &{INFT}? 
     }
 
+    //TODO: This can probably just be removed
     // Requirement for the the concrete resource type
     // to be declared in the implementing contract
     //
@@ -109,4 +119,5 @@ pub contract interface NonFungibleMetadataToken {
             }
         }
     }
+
 }
