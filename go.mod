@@ -2,4 +2,10 @@ module github.com/bjartek/flow-nftm
 
 go 1.16
 
-require github.com/bjartek/go-with-the-flow v1.18.1
+replace github.com/onflow/cadence => /Users/bjartek/dev/cadence
+
+replace github.com/onflow/cadence/languageserver => /Users/bjartek/dev/cadence/languageserver
+
+replace github.com/onflow/flow-cli => /Users/bjartek/dev/flow-cli
+
+require github.com/bjartek/go-with-the-flow/v2 v2.1.2

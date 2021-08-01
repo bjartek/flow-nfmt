@@ -6,9 +6,7 @@
 		}
 	},
 	"contracts": {
-		"NFMTCollection": "./contracts/NFMTCollection.cdc",
 		"NonFungibleToken" : "./contracts/NonFungibleToken.cdc",
-		"NonFungibleMetadataToken" : "./contracts/NonFungibleMetadataToken.cdc",
 		"Evolution" : "./contracts/viv3/Evolution.cdc",
 		"ChainmonstersRewards" : "./contracts/chainmonster/ChainmonstersRewards.cdc",
 		"Art" : "./contracts/versus/Art.cdc",
@@ -38,13 +36,11 @@
 			"emulator-account" : [
 				"FungibleToken",
 				"NonFungibleToken",
-				"NonFungibleMetadataToken",
 				"Content",
 				"Art",
 				"Evolution",
 				"TopShot",
-				"ChainmonstersRewards",
-				"NFMTCollection"
+				"ChainmonstersRewards"
 			]
 		}
 	}

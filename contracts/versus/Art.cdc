@@ -1,6 +1,4 @@
-
 import NonFungibleToken from "./../NonFungibleToken.cdc"
-import NonFungibleMetadataToken from "./../NonFungibleMetadataToken.cdc"
 import Content from "./Content.cdc"
 import FungibleToken from "./../FungibleToken.cdc"
 
@@ -74,7 +72,7 @@ pub contract Art: NonFungibleToken {
         }
     }
 
-    pub resource NFT: NonFungibleToken.INFT, Public, NonFungibleMetadataToken.INFT {
+    pub resource NFT: NonFungibleToken.INFT, Public {
         pub let id: UInt64
         pub let name: String
         pub let description: String
@@ -156,7 +154,7 @@ pub contract Art: NonFungibleToken {
     }
 
 
-    pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, NonFungibleMetadataToken.CollectionPublic {
+    pub resource Collection: CollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
         // dictionary of NFT conforming tokens
         // NFT is a resource type with an `UInt64` ID field
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
@@ -210,15 +208,6 @@ pub contract Art: NonFungibleToken {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
                 return ref as! &Art.NFT
-            } else {
-                return nil
-            }
-        }
-
-        pub fun borrowNFMT(id: UInt64): &{NonFungibleMetadataToken.INFT}?  {
-             if self.ownedNFTs[id] != nil {
-                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
-                return ref as! &NonFungibleMetadataToken.NFT
             } else {
                 return nil
             }
