@@ -1,0 +1,43 @@
+diff --git a/languageserver/go.mod b/languageserver/go.mod
+index 750a6255..fa069287 100644
+--- a/languageserver/go.mod
++++ b/languageserver/go.mod
+@@ -2,6 +2,8 @@ module github.com/onflow/cadence/languageserver
+ 
+ go 1.13
+ 
++replace github.com/onflow/cadence => /Users/bjartek/dev/cadence
++
+ require (
+ 	github.com/google/uuid v1.1.2
+ 	github.com/mattn/go-isatty v0.0.12
+diff --git a/languageserver/integration/resolving.go b/languageserver/integration/resolving.go
+index 16440085..c979c8a1 100644
+--- a/languageserver/integration/resolving.go
++++ b/languageserver/integration/resolving.go
+@@ -20,9 +20,10 @@ package integration
+ 
+ import (
+ 	"fmt"
+-	"github.com/onflow/cadence"
+ 	"io/ioutil"
+ 
++	"github.com/onflow/cadence"
++
+ 	"github.com/onflow/cadence/runtime/common"
+ 	"github.com/onflow/flow-go-sdk"
+ )
+@@ -87,8 +88,12 @@ func (i *FlowIntegration) getAccountAddress(name string) (flow.Address, error) {
+ 	}
+ 
+ 	code := makeManagerCode(scriptGetAddress, serviceAccount.Address().String())
++	value, err := cadence.NewString(name)
++	if err != nil {
++		return flow.Address{}, err
++	}
+ 	args := []cadence.Value{
+-		cadence.NewString(name),
++		value,
+ 	}
+ 
+ 	result, err := i.sharedServices.Scripts.Execute(code, args, "", "")

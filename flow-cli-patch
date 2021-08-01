@@ -1,0 +1,87 @@
+diff --git a/go.mod b/go.mod
+index d32893b..a1532b5 100644
+--- a/go.mod
++++ b/go.mod
+@@ -2,6 +2,10 @@ module github.com/onflow/flow-cli
+ 
+ go 1.13
+ 
++replace github.com/onflow/cadence => /Users/bjartek/dev/cadence
++
++replace github.com/onflow/cadence/languageserver => /Users/bjartek/dev/cadence/languageserver
++
+ require (
+ 	github.com/a8m/envsubst v1.2.0
+ 	github.com/gosuri/uilive v0.0.4
+diff --git a/pkg/flowkit/events_test.go b/pkg/flowkit/events_test.go
+index 908585b..73d7a29 100644
+--- a/pkg/flowkit/events_test.go
++++ b/pkg/flowkit/events_test.go
+@@ -31,6 +31,7 @@ import (
+ )
+ 
+ func TestEvent(t *testing.T) {
++	address, _ := cadence.NewString("00c4fef62310c807")
+ 	flowEvent := tests.NewEvent(0,
+ 		"flow.AccountCreated",
+ 		[]cadence.Field{{
+@@ -38,7 +39,7 @@ func TestEvent(t *testing.T) {
+ 			Type:       cadence.AddressType{},
+ 		}},
+ 		[]cadence.Value{
+-			cadence.NewString("00c4fef62310c807"),
++			address,
+ 		},
+ 	)
+ 	tx := tests.NewTransactionResult([]flow.Event{*flowEvent})
+diff --git a/pkg/flowkit/transaction.go b/pkg/flowkit/transaction.go
+index 7aaf29c..06bf3ac 100644
+--- a/pkg/flowkit/transaction.go
++++ b/pkg/flowkit/transaction.go
+@@ -103,8 +103,14 @@ func addAccountContractWithArgs(
+ 		}
+ 	}`
+ 
+-	cadenceName := cadence.NewString(contract.Name)
+-	cadenceCode := cadence.NewString(contract.SourceHex())
++	cadenceName, err := cadence.NewString(contract.Name)
++	if err != nil {
++		return nil, err
++	}
++	cadenceCode, err := cadence.NewString(contract.SourceHex())
++	if err != nil {
++		return nil, err
++	}
+ 
+ 	tx := flow.NewTransaction().
+ 		AddRawArgument(jsoncdc.MustEncode(cadenceName)).
+@@ -126,7 +132,7 @@ func addAccountContractWithArgs(
+ 	tx.SetScript([]byte(script))
+ 
+ 	t := &Transaction{tx: tx}
+-	err := t.SetSigner(signer)
++	err = t.SetSigner(signer)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+diff --git a/tests/fixtures.go b/tests/fixtures.go
+index 9d2d6d2..cdb62da 100644
+--- a/tests/fixtures.go
++++ b/tests/fixtures.go
+@@ -82,6 +82,7 @@ func NewTransactionResult(events []flow.Event) *flow.TransactionResult {
+ }
+ 
+ func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
++	value, _ := cadence.NewString(address.String())
+ 	events := []flow.Event{
+ 		*NewEvent(0,
+ 			"flow.AccountCreated",
+@@ -90,7 +91,7 @@ func NewAccountCreateResult(address flow.Address) *flow.TransactionResult {
+ 				Type:       cadence.AddressType{},
+ 			}},
+ 			[]cadence.Value{
+-				cadence.NewString(address.String()),
++				value,
+ 			},
+ 		),
+ 	}
