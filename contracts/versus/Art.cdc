@@ -1,6 +1,7 @@
 import NonFungibleToken from "./../NonFungibleToken.cdc"
 import Content from "./Content.cdc"
 import FungibleToken from "./../FungibleToken.cdc"
+import NFTMetadata from "./../NFTMetadata.cdc"
 
 //A NFT contract to store art
 //modified by making all protected methods public for convenience
@@ -122,23 +123,45 @@ pub contract Art: NonFungibleToken {
             return contentCollection.content(self.contentId!)!
         }
 
-
-        // FIP: Adding the methods and how to resolve them
         pub fun getName() : String {
             return self.metadata.name
         }
 
         pub fun getSchemas() : [String] {
-            return ["imageUrl", "metadata"]
+            return ["imageUrl", "metadata", "metadata/royalties", "metadata/creativework", "metadata/editions"]
         }
 
         pub fun resolveSchema(_ schema: String): AnyStruct {
+
+			if schema == "metadata/royalties" {
+				var royalties: [NFTMetadata.Royalty] = []
+				for name in self.royalty.keys {
+					var r= self.royalty[name]!
+					royalties.append(NFTMetadata.Royalty(wallet: r.wallet, cut: r.cut))
+				}
+				return NFTMetadata.Royalties(royalty:royalties)
+			}
+				
+			if schema == "metadata/editions" {
+				return NFTMetadata.Editioned(edition: self.metadata.edition, maxEdition: self.metadata.maxEdition)
+			}
+			if schema == "metadata/creativework" {
+				return NFTMetadata.CreativeWork(
+					artist:self.metadata.artist,
+					name:self.metadata.name,
+					description:self.metadata.description,
+					type:self.metadata.type
+				)
+			}
+
             if schema == "imageUrl" {
                 return self.content()
             }
             if schema == "metadata" {
                 return self.metadata
             }
+
+
             panic("Cannot resolve for unknown schema")
         }
     }

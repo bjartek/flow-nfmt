@@ -7,14 +7,23 @@ import (
 )
 
 func main() {
-	//	flow := gwtf.NewGoWithTheFlowEmulator().InitializeContracts().CreateAccounts("emulator-account")
+	flow := gwtf.NewGoWithTheFlowEmulator().InitializeContracts().CreateAccounts("emulator-account")
 
-	flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
+	//flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
 
 	flow.TransactionFromFile("nfmt").
 		SignProposeAndPayAsService().
 		RunPrintEventsFull()
 
-	result := flow.ScriptFromFile("art").AccountArgument("account").UInt64Argument(0).RunReturnsJsonString()
+	result, _ := flow.ScriptFromFile("art").AccountArgument("account").UInt64Argument(0).RunReturns()
+	fmt.Println(result)
+
+	result, _ = flow.ScriptFromFile("creativework").AccountArgument("account").UInt64Argument(0).RunReturns()
+	fmt.Println(result)
+
+	result, _ = flow.ScriptFromFile("editioned").AccountArgument("account").UInt64Argument(0).RunReturns()
+	fmt.Println(result)
+
+	result, _ = flow.ScriptFromFile("royalty").AccountArgument("account").UInt64Argument(0).RunReturns()
 	fmt.Println(result)
 }

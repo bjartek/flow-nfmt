@@ -8,4 +8,6 @@ replace github.com/onflow/cadence/languageserver => /Users/bjartek/dev/cadence/l
 
 replace github.com/onflow/flow-cli => /Users/bjartek/dev/flow-cli
 
+//"replace github.com/bjartek/go-with-the-flow => /Users/bjartek/dev/go-with-the-flow
+
 require github.com/bjartek/go-with-the-flow/v2 v2.1.2
