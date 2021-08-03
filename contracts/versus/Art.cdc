@@ -8,102 +8,101 @@ import NFTMetadata from "./../NFTMetadata.cdc"
 pub contract Art: NonFungibleToken {
 
 	pub let CollectionStoragePath: StoragePath
-		pub let CollectionPublicPath: PublicPath
+	pub let CollectionPublicPath: PublicPath
 
-		pub var totalSupply: UInt64
+	pub var totalSupply: UInt64
+	
+	pub event ContractInitialized()
+	pub event Withdraw(id: UInt64, from: Address?)
+	pub event Deposit(id: UInt64, to: Address?)
+	pub event Created(id: UInt64, metadata: Metadata)
+	pub event Editioned(id: UInt64, from: UInt64, edition: UInt64, maxEdition: UInt64)
+	
+	//The public interface can show metadata and the content for the Art piece
+	pub resource interface Public {
+		pub let id: UInt64
+		pub let metadata: Metadata
 
-		pub event ContractInitialized()
-		pub event Withdraw(id: UInt64, from: Address?)
-		pub event Deposit(id: UInt64, to: Address?)
-		pub event Created(id: UInt64, metadata: Metadata)
-		pub event Editioned(id: UInt64, from: UInt64, edition: UInt64, maxEdition: UInt64)
+		//these three are added because I think they will be in the standard. Atleast dieter thinks it will be needed
+		pub let name: String
+		pub let description: String
+		pub let schema: String? 
+		pub fun content() : String?
 
-		//The public interface can show metadata and the content for the Art piece
-		pub resource interface Public {
-			pub let id: UInt64
-				pub let metadata: Metadata
+		pub let royalty: {String: Royalty}
+		pub fun cacheKey() : String
 
-				//these three are added because I think they will be in the standard. Atleast dieter thinks it will be needed
-				pub let name: String
-				pub let description: String
-				pub let schema: String? 
-
-				pub fun content() : String?
-
-				pub let royalty: {String: Royalty}
-			pub fun cacheKey() : String
-
-		}
+	}
 
 	pub struct Metadata {
 		pub let name: String
-			pub let artist: String
-			pub let artistAddress:Address
-			pub let description: String
-			pub let type: String
-			pub let edition: UInt64
-			pub let maxEdition: UInt64
+		pub let artist: String
+		pub let artistAddress:Address
+		pub let description: String
+		pub let type: String
+		pub let edition: UInt64
+		pub let maxEdition: UInt64
 
 
-			init(name: String, 
-					artist: String,
-					artistAddress:Address, 
-					description: String, 
-					type: String, 
-					edition: UInt64,
-					maxEdition: UInt64) {
-				self.name=name
-					self.artist=artist
-					self.artistAddress=artistAddress
-					self.description=description
-					self.type=type
-					self.edition=edition
-					self.maxEdition=maxEdition
-			}
+		init(name: String, 
+				artist: String,
+				artistAddress:Address, 
+				description: String, 
+				type: String, 
+				edition: UInt64,
+				maxEdition: UInt64) {
+			self.name=name
+			self.artist=artist
+			self.artistAddress=artistAddress
+			self.description=description
+			self.type=type
+			self.edition=edition
+			self.maxEdition=maxEdition
+		}
 
 	}
 
 	pub struct Royalty{
 		pub let wallet:Capability<&{FungibleToken.Receiver}> 
-			pub let cut: UFix64
+		pub let cut: UFix64
 
-			init(wallet:Capability<&{FungibleToken.Receiver}>, cut: UFix64 ){
-				self.wallet=wallet
-					self.cut=cut
-			}
+		init(wallet:Capability<&{FungibleToken.Receiver}>, cut: UFix64 ){
+			self.wallet=wallet
+				self.cut=cut
+		}
 	}
 
 	pub resource NFT: NonFungibleToken.INFT, Public {
 		pub let id: UInt64
-			pub let name: String
-			pub let description: String
+		pub let name: String
+		pub let description: String
 
-			pub let schema: String?
-			//content can either be embedded in the NFT as and URL or a pointer to a Content collection to be stored onChain
-			//a pointer will be used for all editions of the same Art when it is editioned 
-			pub let contentCapability:Capability<&Content.Collection>?
-			pub let contentId: UInt64?
-			pub let url: String?
-			pub let metadata: Metadata
-			pub let royalty: {String: Royalty}
+		pub let schema: String?
+		//content can either be embedded in the NFT as and URL or a pointer to a Content collection to be stored onChain
+		//a pointer will be used for all editions of the same Art when it is editioned 
+		pub let contentCapability:Capability<&Content.Collection>?
+		pub let contentId: UInt64?
+		pub let url: String?
+		pub let metadata: Metadata
+		pub let royalty: {String: Royalty}
 
 		init(
-				initID: UInt64, 
-				metadata: Metadata,
-				contentCapability:Capability<&Content.Collection>?, 
-				contentId: UInt64?, 
-				url: String?,
-				royalty:{String: Royalty}) {
+			initID: UInt64, 
+			metadata: Metadata,
+			contentCapability:Capability<&Content.Collection>?, 
+			contentId: UInt64?, 
+			url: String?,
+			royalty:{String: Royalty}) {
 
 			self.id = initID
-				self.metadata=metadata
-				self.contentCapability=contentCapability
-				self.contentId=contentId
-				self.url=url
-				self.royalty=royalty
-				self.schema=nil
-				self.name = metadata.name
-				self.description=metadata.description
+			self.metadata=metadata
+			self.contentCapability=contentCapability
+			self.contentId=contentId
+			self.url=url
+			self.royalty=royalty
+			self.schema=nil
+			self.name = metadata.name
+			self.description=metadata.description
 		}
 
 		pub fun cacheKey() : String {
@@ -171,9 +170,9 @@ pub contract Art: NonFungibleToken {
 	pub resource interface CollectionPublic {
 
 		pub fun deposit(token: @NonFungibleToken.NFT)
-			pub fun getIDs(): [UInt64]
-							   pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-															   pub fun borrowArt(id: UInt64): &{Art.Public}?
+		pub fun getIDs(): [UInt64]
+		pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
+		pub fun borrowArt(id: UInt64): &{Art.Public}?
 	}
 
 
@@ -186,28 +185,19 @@ pub contract Art: NonFungibleToken {
 			self.ownedNFTs <- {}
 		}
 
-		// withdraw removes an NFT from the collection and moves it to the caller
-		pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
-			let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
-
-				emit Withdraw(id: token.id, from: self.owner?.address)
-
-				return <-token
-		}
-
 		// deposit takes a NFT and adds it to the collections dictionary
 		// and adds the ID to the id array
 		pub fun deposit(token: @NonFungibleToken.NFT) {
 			let token <- token as! @Art.NFT
 
-				let id: UInt64 = token.id
+			let id: UInt64 = token.id
 
-				// add the new token to the dictionary which removes the old one
-				let oldToken <- self.ownedNFTs[id] <- token
+			// add the new token to the dictionary which removes the old one
+			let oldToken <- self.ownedNFTs[id] <- token
 
-				emit Deposit(id: id, to: self.owner?.address)
+			emit Deposit(id: id, to: self.owner?.address)
 
-				destroy oldToken
+			destroy oldToken
 		}
 
 		// getIDs returns an array of the IDs that are in the collection
