@@ -6,7 +6,7 @@ import FungibleToken from "../contracts/FungibleToken.cdc"
 transaction() {
      prepare(account: AuthAccount) {
 
-		let artCollectionCap=account.getCapability<&{Art.CollectionPublic}>(Art.CollectionPublicPath)
+		let artCollectionCap=account.getCapability<&{NonFungibleToken.CollectionPublic}>(Art.CollectionPublicPath)
 		let wallet= account.getCapability<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
 		let artCollection=artCollectionCap.borrow()!
 
