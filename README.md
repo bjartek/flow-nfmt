@@ -41,7 +41,7 @@ The result will here be
 
 to resolve any of these schmes run
 ```
-url="0xf8d6e0586b0a20c7/versusArtCollection/0/metadata|editions"
+url="0xf8d6e0586b0a20c7/versusArtCollection/0/metadata|editions" go run web3/main.go
 ```
 
 to get editions output like
