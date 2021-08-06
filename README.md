@@ -21,7 +21,7 @@ Take a look at the `transactions/nfmt.cdc` file for information on how to min th
 
 If you make your NFT collection link to `NonFungibleToken.PublicCollection` support for web3 style links are very easy.
  ```
-url="0xf8d6e0586b0a20c7/versusArtCollection/" go run web3/main.go
+url="0xf8d6e0586b0a20c7/versusArtCollection" go run web3/main.go
 ```
 will return all the ids you have in this collection
 
