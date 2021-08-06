@@ -11,6 +11,7 @@
 		"Evolution" : "./contracts/viv3/Evolution.cdc",
 		"ChainmonstersRewards" : "./contracts/chainmonster/ChainmonstersRewards.cdc",
 		"Art" : "./contracts/versus/Art.cdc",
+		"Profile" : "./contracts/Profile.cdc",
 		"NFTMetadata" : "./contracts/NFTMetadata.cdc",
 		"Content" : "./contracts/versus/Content.cdc",
 		"TopShot" : "./contracts/topshot/TopShot.cdc",
@@ -37,11 +38,7 @@
 		"emulator" : {
 			"emulator-account" : [
 				"NonFungibleToken",
-				"Content",
-				"Art",
-				"Evolution",
-				"TopShot",
-				"ChainmonstersRewards", 
+				"Profile",
 				"NFTMetadata", 
 				"GenericNFT"
 			]

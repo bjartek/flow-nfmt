@@ -1,15 +1,17 @@
 import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
 import FungibleToken from "../contracts/FungibleToken.cdc"
 import NFTMetadata from "../contracts/NFTMetadata.cdc"
+import Profile from "../contracts/Profile.cdc"
 
 //A NFT contract to store art
 //modified by making all protected methods public for convenience
 pub contract GenericNFT: NonFungibleToken {
 
+  pub let AdminStoragePath: StoragePath
   pub let forSaleSchemeName : String
-
-    pub let CollectionStoragePath: StoragePath
-    pub let CollectionPublicPath: PublicPath
+  pub let minterSchemeName : String
+  pub let minterOwnerSchemeName : String
+  pub let minterTenantSchemeName : String
 
     pub var totalSupply: UInt64
 
@@ -22,15 +24,21 @@ pub contract GenericNFT: NonFungibleToken {
     pub resource NFT: NonFungibleToken.INFT {
       pub let id: UInt64
       access(contract) let schemas: {String : AnyStruct}
+      access(contract) let sharedData: {String : GenericNFTPointer}
       access(contract) let name: String
-        init(
-            initID: UInt64, 
+      access(contract) let minterPlatform: MinterPlatform
+
+      init(initID: UInt64, 
             name: String,
-            schemas: {String: AnyStruct}) {
+            schemas: {String: AnyStruct}, 
+            sharedData: {String: GenericNFTPointer}, 
+            minterPlatform: MinterPlatform) {
 
           self.id = initID
             self.schemas=schemas
             self.name=name
+            self.sharedData=sharedData
+            self.minterPlatform=minterPlatform
         }
 
 
@@ -40,19 +48,33 @@ pub contract GenericNFT: NonFungibleToken {
       }
 
       pub fun getSchemas() : [String] {
-        return self.schemas.keys
+        var schema= self.schemas.keys
+          schema.appendAll(self.sharedData.keys)
+          schema.append(GenericNFT.minterSchemeName)
+//          schema.append(GenericNFT.minterTenantSchemeName)
+//          schema.append(GenericNFT.minterOwnerSchemeName)
+          return schema
       }
 
+      //Note that when resolving schemas shared data are loaded last, so use schema names that are unique. ie prefix with shared/ or something
       pub fun resolveSchema(_ schema: String): AnyStruct {
-        if !self.schemas.keys.contains(schema) {
+        if !self.getSchemas().contains(schema) {
           panic("Cannot resolve for unknown schema")
         }
 
-        return self.schemas[schema]
+        if schema == GenericNFT.minterSchemeName {
+          //todo expand plattforms in verbose mode?
+          return self.minterPlatform
+        } else if self.schemas.keys.contains(schema) {
+          return self.schemas[schema]
+        } else if self.sharedData.keys.contains(schema) {
+          return self.sharedData[schema]!.resolve()
+        }
+
+        return ""
       }
 
     }
-
 
 
   pub resource interface CollectionPublic {
@@ -169,13 +191,20 @@ pub contract GenericNFT: NonFungibleToken {
       }
 
 
+      //the owner of the generic NFT plattform can take a cut
+      let platform = nft.resolveSchema(GenericNFT.minterSchemeName) as! MinterPlatform 
+      let platformOwnerCut=salePrice * platform.ownerPercentCut
+      if platformOwnerCut != 0.0 {
+        platform.owner.borrow()?.deposit(from: <- vault.withdraw(amount: platformOwnerCut))
+      }
+
       //deposit rest of money
       forSale.wallet.borrow()!.deposit(from: <- vault)
 
-      //deposit the NFT
+        //deposit the NFT
         target.borrow()!.deposit(token: <- nft)
 
-      //TODO: error handling
+        //TODO: error handling
     }
     destroy() {
       destroy self.ownedNFTs
@@ -219,7 +248,7 @@ pub contract GenericNFT: NonFungibleToken {
 
 
     pub fun changePrice(tokenId: UInt64, price: UFix64) {
-          let pageNumber = self.page(tokenId)
+      let pageNumber = self.page(tokenId)
         // Remove the collection
         let page <- self.pages.remove(key: pageNumber)!
 
@@ -228,14 +257,14 @@ pub contract GenericNFT: NonFungibleToken {
     }
 
     pub fun removeForSale(tokenId: UInt64) {
-          let pageNumber = self.page(tokenId)
+      let pageNumber = self.page(tokenId)
         // Remove the collection
         let page <- self.pages.remove(key: pageNumber)!
 
         page.removeForSale(tokenId: tokenId)
         // Put the Collection back in storage
         self.pages[pageNumber] <-! page
-   
+
     }
 
     pub fun forSale(tokenId: UInt64, saleInfo: NFTMetadata.ForSale) {
@@ -301,35 +330,128 @@ pub contract GenericNFT: NonFungibleToken {
 
   }
 
+  //TODO: add support for shared resources across nfts that are stored with the minter
+  pub resource Minter {
+    access(contract) let platform: MinterPlatform
+
+      init(platform: MinterPlatform) {
+        self.platform=platform
+      }
+
+
+    pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: GenericNFTPointer}) : @GenericNFT.NFT {
+        let nft <-  create NFT(initID: GenericNFT.totalSupply, name: name, schemas:schemas, sharedData:sharedData, minterPlatform: self.platform)
+        GenericNFT.totalSupply = GenericNFT.totalSupply + 1
+        return <-  nft
+    }
+
+  }
+
+  pub resource interface MinterProxyPublic {
+    pub fun setMinterCapability(cap: Capability<&Minter>)
+  }
+
+  // MinterProxy
+  //
+  // Resource object holding a capability that can be used to mint new tokens.
+  // The resource that this capability represents can be deleted by the admin
+  // in order to unilaterally revoke minting capability if needed.
+
+  pub resource MinterProxy: MinterProxyPublic {
+
+    // access(self) so nobody else can copy the capability and use it.
+    access(self) var minterCapability: Capability<&Minter>?
+
+      // Anyone can call this, but only the admin can create Minter capabilities,
+      // so the type system constrains this to being called by the admin.
+      pub fun setMinterCapability(cap: Capability<&Minter>) {
+        self.minterCapability = cap
+      }
+
+    pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: GenericNFTPointer}): @GenericNFT.NFT {
+      return <- self.minterCapability!
+        .borrow()!
+        .mintNFT(name: name, schemas: schemas, sharedData: sharedData)
+    }
+
+    init() {
+      self.minterCapability = nil
+    }
+
+  }
+
+  // createMinterProxy
+  //
+  // Function that creates a MinterProxy.
+  // Anyone can call this, but the MinterProxy cannot mint without a Minter capability,
+  // and only the admin can provide that.
+  //
+  pub fun createMinterProxy(): @MinterProxy {
+    return <- create MinterProxy()
+  }
+
+
+  pub resource Admin {
+    pub fun createMinter(platform: MinterPlatform) : @GenericNFT.Minter {
+      return <- create Minter(platform:platform)
+    }
+
+  }
+
+  pub struct GenericNFTPointer{
+      pub let collection: Capability<&{GenericNFT.CollectionPublic}>
+      pub let id: UInt64
+      pub let scheme: String
+
+      init(collection: Capability<&{GenericNFT.CollectionPublic}>, id: UInt64, scheme:String) {
+        self.collection=collection
+          self.id=id
+          self.scheme=scheme
+      }
+
+    pub fun resolve() : AnyStruct {
+      return self.collection.borrow()!.borrowNFT(id: self.id).resolveSchema(self.scheme)
+    }
+  }
+
+  pub struct MinterPlatform {
+      pub let owner: Capability<&{Profile.Public}>
+      pub let tenant: Capability<&{Profile.Public}>
+      pub let ownerPercentCut: UFix64
+
+      init(owner:Capability<&{Profile.Public}>, tenant: Capability<&{Profile.Public}>, ownerPercentCut: UFix64) {
+          self.owner=owner
+          self.tenant=tenant
+          self.ownerPercentCut=ownerPercentCut
+      }
+  }
+
   // public function that anyone can call to create a new empty collection
   pub fun createEmptyCollection(): @NonFungibleToken.Collection {
     return <- create Collection()
   }
 
+
+  //create a empty paged colleciton that will auto grow and store nfts in <pageSize> number of pages
+  //not really sure if this is needed here, but here it is
   pub fun createEmptyPagedCollection(pageSize:UInt64) : @GenericNFT.PagedCollection {
     return <- create PagedCollection(pageSize: pageSize)
   }
 
-//TODO: make sure that when creating a minter add a special metadata struct maybe MinterPlattform that has a royalty
-//TODO: Admin resource to create minter
-   //TODO: shared content
-  //TODO protect this with minter
-  //This method can only be called from another contract in the same account. In Versus case it is called from the VersusAdmin that is used to administer the solution
-  pub fun createGenericNFT(name: String, schemas: {String: AnyStruct}) : @GenericNFT.NFT {
-    let nft <-  create NFT(initID: GenericNFT.totalSupply, name: name, schemas:schemas)
-      GenericNFT.totalSupply = GenericNFT.totalSupply + 1
-      return <-  nft
-  }
 
   init() {
-    self.forSaleSchemeName="metadata/forSale"
+      self.forSaleSchemeName="metadata/forSale"
+      self.minterSchemeName="minter"
+      self.minterOwnerSchemeName="minter/Owner"
+      self.minterTenantSchemeName="minter/Tenant"
       // Initialize the total supply
       self.totalSupply = 0
-      self.CollectionPublicPath=/public/genericNFT
-      self.CollectionStoragePath=/storage/genericNFT
 
-      self.account.save<@NonFungibleToken.Collection>(<- GenericNFT.createEmptyCollection(), to: GenericNFT.CollectionStoragePath)
-      self.account.link<&{NonFungibleToken.CollectionPublic}>(GenericNFT.CollectionPublicPath, target: GenericNFT.CollectionStoragePath)
+      self.AdminStoragePath = /storage/fusdAdmin
+
+      //Ideally I would not want this here in the same account that owns the contract, hope we can have multiple signers for init contract soon
+      let admin <- create Admin()
+      self.account.save(<-admin, to: self.AdminStoragePath)
       emit ContractInitialized()
   }
 }

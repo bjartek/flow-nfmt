@@ -1,5 +1,5 @@
-
 import FungibleToken from "../contracts/FungibleToken.cdc"
+import Profile from "../contracts/Profile.cdc"
 
 pub contract NFTMetadata {
 
@@ -48,6 +48,7 @@ pub contract NFTMetadata {
         }
     }
 
+
 	pub struct CreativeWork {
 		pub let artist: String
 		pub let name: String
@@ -71,4 +72,6 @@ pub contract NFTMetadata {
 			self.maxEdition=maxEdition
 		}
 	}
+
+
 }

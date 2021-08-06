@@ -55,7 +55,4 @@ to get editions output like
 
 
 ## TODO:
- - admin capability that can create minters
- - a minter should be able to ensure scarcity of their resource. Not sure how to achieve this. 
-  - maybe this is just a minter scheme that is always set and that you cannot overwrite. That could work
- - for each sale a cut will go to the minter and to the creator of GenericNFT
+ - add profile in example 
