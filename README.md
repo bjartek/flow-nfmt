@@ -45,6 +45,7 @@ to resolve any of these schmes run
 ```
 url="0xf8d6e0586b0a20c7/versusArtCollection/0/metadata|editions"
 ```
+note that '|' are replaced with '/' when resolving schemas and collection paths for convenience
 
 to get editions output like
 ```
