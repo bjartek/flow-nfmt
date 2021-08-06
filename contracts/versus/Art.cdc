@@ -136,7 +136,7 @@ pub contract Art: NonFungibleToken {
         var royalties: [NFTMetadata.Royalty] = []
           for name in self.royalty.keys {
             var r= self.royalty[name]!
-              royalties.append(NFTMetadata.Royalty(wallet: r.wallet, cut: r.cut))
+              royalties.append(NFTMetadata.Royalty(wallet: r.wallet, cut: r.cut, type: NFTMetadata.RoyaltyType.percentage))
           }
         return NFTMetadata.Royalties(royalty:royalties)
       }

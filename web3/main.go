@@ -22,6 +22,11 @@ func main() {
 
 	account := parts[0]
 	publicPath := strings.ReplaceAll(parts[1], "|", "/")
+
+	if len(parts) == 2 {
+		flow.ScriptFromFile("web3-ids").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).Run()
+		return
+	}
 	id, err := strconv.ParseUint(parts[2], 10, 64)
 	if err != nil {
 		log.Fatal(err)

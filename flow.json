@@ -7,6 +7,7 @@
 	},
 	"contracts": {
 		"NonFungibleToken" : "./contracts/NonFungibleToken.cdc",
+		"GenericNFT" : "./contracts/GenericNFT.cdc",
 		"Evolution" : "./contracts/viv3/Evolution.cdc",
 		"ChainmonstersRewards" : "./contracts/chainmonster/ChainmonstersRewards.cdc",
 		"Art" : "./contracts/versus/Art.cdc",
@@ -41,7 +42,8 @@
 				"Evolution",
 				"TopShot",
 				"ChainmonstersRewards", 
-				"NFTMetadata"
+				"NFTMetadata", 
+				"GenericNFT"
 			]
 		}
 	}

@@ -6,7 +6,7 @@ import (
 
 func main() {
 	flow := gwtf.NewGoWithTheFlowEmulator().InitializeContracts().CreateAccounts("emulator-account")
-	//	flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
+	//flow := gwtf.NewGoWithTheFlowInMemoryEmulator()
 
 	flow.TransactionFromFile("nfmt").
 		SignProposeAndPayAsService().
