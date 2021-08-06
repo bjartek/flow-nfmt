@@ -1,20 +1,16 @@
-# NonFungibleMetadataToken - FIP
-
-This is a proposal for a new NFT standard with more fields. 
+# Generic NFT contract
 
 
-This proposal adds 3 new methods to NonFungibleToken and ads a default implementations to them. Thus it does not break compatibility.
+A generic NFT contract where the owner of the platform can create a minter and give/sell it to somebody. 
 
-```
-getName() : String
-getSchemas() : [String]
-resolveSchema(_ schema: String) : AnyStruct
-```
+They can then mint art and a certain % of sales will go to the owner of the platform. For now only simple buy direct sales are added.
 
-I did not add any fields since you cannot upgrade a contract by adding a new field. 
+Builds upon the NFT metadata purposal so the web3 style links from below still work. 
 
 
-NB! Currently as can be seen in go.mod this needs a local version of flow-cli and cadence. 
+Take a look at the `transactions/nfmt.cdc` file for information on how to min things.
+
+[NB](NB)! Currently as can be seen in go.mod this needs a local version of flow-cli and cadence. 
 
  - The cadence version is https://github.com/bluesign/cadence with the patch in cadence-patch
  - flow-cli is latest with patch in flow-cli-patch
@@ -22,9 +18,15 @@ NB! Currently as can be seen in go.mod this needs a local version of flow-cli an
 
 ## Support for web3 like urls 
 
+
 If you make your NFT collection link to `NonFungibleToken.PublicCollection` support for web3 style links are very easy.
  ```
-url="0xf8d6e0586b0a20c7/versusArtCollection/0" go run web3/main.go
+url="0xf8d6e0586b0a20c7/versusArtCollection/" go run web3/main.go
+```
+will return all the ids you have in this collection
+
+ ```
+url="0xf8d6e0586b0a20c7/versusArtCollection/1" go run web3/main.go
 ```
 will return the supported schemes for the nft of user `0xf8d6e0586b0a20c7` in the path of `versusArtCollection` for index 0
 The result will here be
@@ -56,3 +58,4 @@ to get editions output like
 
 ## TODO:
  - add profile in example 
+ - method to filter all nfts on a tenant.
