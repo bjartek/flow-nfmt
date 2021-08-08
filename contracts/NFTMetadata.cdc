@@ -4,22 +4,21 @@ import Profile from "../contracts/Profile.cdc"
 pub contract NFTMetadata {
 
 
-  pub struct ForSale{
-    pub let wallet:Capability<&{FungibleToken.Receiver}> 
-    pub let type: String
-    pub var saleSum: UFix64
+	pub struct ForSale{
+		pub let wallet:Capability<&{FungibleToken.Receiver}> 
+		pub let type: String
+		pub var saleSum: UFix64
 
-    init(type: String, saleSum:UFix64, wallet: Capability<&{FungibleToken.Receiver}>) {
+		init(type: String, saleSum:UFix64, wallet: Capability<&{FungibleToken.Receiver}>) {
+			self.type=type
+			self.saleSum=saleSum
+			self.wallet=wallet
+		}
 
-      self.type=type
-      self.saleSum=saleSum
-      self.wallet=wallet
-    }
-
-    pub fun changePrice(_ saleSum: UFix64) {
-      self.saleSum=saleSum
-    }
-  }
+		pub fun changePrice(_ saleSum: UFix64) {
+			self.saleSum=saleSum
+		}
+	}
 
 	pub struct Royalties{
 		pub let royalty: [Royalty]
@@ -29,24 +28,24 @@ pub contract NFTMetadata {
 	}
 
 
-    pub enum RoyaltyType: UInt8{
-      pub case fixed
-      pub case percentage
-     }
+	pub enum RoyaltyType: UInt8{
+		pub case fixed
+		pub case percentage
+	}
 
-    pub struct Royalty{
-        pub let wallet:Capability<&{FungibleToken.Receiver}> 
-        pub let cut: UFix64
+	pub struct Royalty{
+		pub let wallet:Capability<&{FungibleToken.Receiver}> 
+		pub let cut: UFix64
 
-        //can be percentage
-        pub let type: RoyaltyType
+		//can be percentage
+		pub let type: RoyaltyType
 
-        init(wallet:Capability<&{FungibleToken.Receiver}>, cut: UFix64, type:RoyaltyType ){
-           self.wallet=wallet
-           self.cut=cut
-           self.type=type
-        }
-    }
+		init(wallet:Capability<&{FungibleToken.Receiver}>, cut: UFix64, type:RoyaltyType ){
+			self.wallet=wallet
+			self.cut=cut
+			self.type=type
+		}
+	}
 
 
 	pub struct CreativeWork {
@@ -72,6 +71,4 @@ pub contract NFTMetadata {
 			self.maxEdition=maxEdition
 		}
 	}
-
-
 }

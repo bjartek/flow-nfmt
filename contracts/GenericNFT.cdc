@@ -1,17 +1,32 @@
+
+//so doing imports like this is strictly not neccesary in contracts, but it is easier that they are the same in transactions/scripts/contracts
+//import NonFungibleToken from "./NonFungibleToken.cdc" would work here aswell
+
 import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
 import FungibleToken from "../contracts/FungibleToken.cdc"
 import NFTMetadata from "../contracts/NFTMetadata.cdc"
 import Profile from "../contracts/Profile.cdc"
 
-//A NFT contract to store art
+/* 
+A NFT contrat to mint and handle GenericNFTs.
+
+- an NFT is generic because when you mint it you can add whatever schemas you want to it. 
+- you can also add shared shemas if you want to store content one place and refer them in other GenericNFTs. NB! Note that you should store these shared NFTS in a schema that has a private capability path so that you avoid transfering them away easily. If you do thinks will break and people will not like you. 
+-- all shared schemas must by convenience start with shared/ to avoid confusion
+- there are some given schemas that are always present with an GenericNFT 
+--  minter will tell you the name of this minter, the percentage that the owner of the platform will take on sales and link to profile capabilities
+-- profile/minter will give you the profile of the minter
+-- profile/platform will give you the profile of the platform. The entity that deployed this contract
+*/
+
 //modified by making all protected methods public for convenience
 pub contract GenericNFT: NonFungibleToken {
 
 	pub let AdminStoragePath: StoragePath
 	pub let forSaleSchemeName : String
 	pub let minterSchemeName : String
-	pub let minterOwnerSchemeName : String
-	pub let minterTenantSchemeName : String
+	pub let minterProfilechemeName : String
+	pub let platformProfileSchemeName : String
 
 	pub var totalSupply: UInt64
 
@@ -24,24 +39,21 @@ pub contract GenericNFT: NonFungibleToken {
 	pub resource NFT: NonFungibleToken.INFT {
 		pub let id: UInt64
 		access(contract) let schemas: {String : AnyStruct}
-		access(contract) let sharedData: {String : GenericNFTPointer}
+		access(contract) let sharedData: {String : SchemaPointer}
 		access(contract) let name: String
 		access(contract) let minterPlatform: MinterPlatform
 
-		init(initID: UInt64, 
-		name: String,
-		schemas: {String: AnyStruct}, 
-		sharedData: {String: GenericNFTPointer}, 
-		minterPlatform: MinterPlatform) {
-
+		init(initID: UInt64, name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
+			for sharedKey in sharedData.keys {
+				assert(sharedKey.length < 8,message:"Is to short, must start with shared/") 
+				assert(sharedKey.slice(from:0, upTo:6) != "shared/", message: "Does not start with shared/")
+			}
 			self.id = initID
 			self.schemas=schemas
 			self.name=name
 			self.sharedData=sharedData
 			self.minterPlatform=minterPlatform
 		}
-
-
 
 		pub fun getName() : String {
 			return self.name
@@ -51,8 +63,8 @@ pub contract GenericNFT: NonFungibleToken {
 			var schema= self.schemas.keys
 			schema.appendAll(self.sharedData.keys)
 			schema.append(GenericNFT.minterSchemeName)
-			//          schema.append(GenericNFT.minterTenantSchemeName)
-			//          schema.append(GenericNFT.minterOwnerSchemeName)
+			schema.append(GenericNFT.minterProfilechemeName)
+			schema.append(GenericNFT.platformProfileSchemeName)
 			return schema
 		}
 
@@ -65,6 +77,10 @@ pub contract GenericNFT: NonFungibleToken {
 			if schema == GenericNFT.minterSchemeName {
 				//todo expand plattforms in verbose mode?
 				return self.minterPlatform
+			} else if schema == GenericNFT.minterProfilechemeName {
+				self.minterPlatform.minter.borrow()!.asProfile()
+			} else if schema == GenericNFT.platformProfileSchemeName {
+				self.minterPlatform.platform.borrow()!.asProfile()
 			} else if self.schemas.keys.contains(schema) {
 				return self.schemas[schema]
 			} else if self.sharedData.keys.contains(schema) {
@@ -130,6 +146,8 @@ pub contract GenericNFT: NonFungibleToken {
 			return &self.ownedNFTs[id] as &NonFungibleToken.NFT
 		}
 
+
+		//TODO: add more safety here
 		pub fun changePrice(tokenId: UInt64, price: UFix64) {
 			if self.ownedNFTs[tokenId] != nil {
 				let ref = &self.ownedNFTs[tokenId] as auth &NonFungibleToken.NFT
@@ -192,10 +210,11 @@ pub contract GenericNFT: NonFungibleToken {
 
 
 			//the owner of the generic NFT plattform can take a cut
-			let platform = nft.resolveSchema(GenericNFT.minterSchemeName) as! MinterPlatform 
-			let platformOwnerCut=salePrice * platform.ownerPercentCut
+			let minter = nft.resolveSchema(GenericNFT.minterSchemeName) as! MinterPlatform 
+			let platformOwnerCut=salePrice * minter.platformPercentCut
+			//TODO: check that it can accept the type of token and else emit an event
 			if platformOwnerCut != 0.0 {
-				platform.owner.borrow()?.deposit(from: <- vault.withdraw(amount: platformOwnerCut))
+				minter.platform.borrow()?.deposit(from: <- vault.withdraw(amount: platformOwnerCut))
 			}
 
 			//deposit rest of money
@@ -339,7 +358,7 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 
-		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: GenericNFTPointer}) : @GenericNFT.NFT {
+		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}) : @GenericNFT.NFT {
 			let nft <-  create NFT(initID: GenericNFT.totalSupply, name: name, schemas:schemas, sharedData:sharedData, minterPlatform: self.platform)
 			GenericNFT.totalSupply = GenericNFT.totalSupply + 1
 			return <-  nft
@@ -368,7 +387,7 @@ pub contract GenericNFT: NonFungibleToken {
 			self.minterCapability = cap
 		}
 
-		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: GenericNFTPointer}): @GenericNFT.NFT {
+		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}): @GenericNFT.NFT {
 			return <- self.minterCapability!
 			.borrow()!
 			.mintNFT(name: name, schemas: schemas, sharedData: sharedData)
@@ -398,7 +417,11 @@ pub contract GenericNFT: NonFungibleToken {
 
 	}
 
-	pub struct GenericNFTPointer{
+
+	/*
+	A pointer into the schema of an NFT stored in another GenericNFT collection
+	*/
+	pub struct SchemaPointer{
 		pub let collection: Capability<&{GenericNFT.CollectionPublic}>
 		pub let id: UInt64
 		pub let scheme: String
@@ -415,14 +438,16 @@ pub contract GenericNFT: NonFungibleToken {
 	}
 
 	pub struct MinterPlatform {
-		pub let owner: Capability<&{Profile.Public}>
-		pub let tenant: Capability<&{Profile.Public}>
-		pub let ownerPercentCut: UFix64
+		pub let platform: Capability<&{Profile.Public}>
+		pub let minter: Capability<&{Profile.Public}>
+		pub let platformPercentCut: UFix64
+		pub let name: String
 
-		init(owner:Capability<&{Profile.Public}>, tenant: Capability<&{Profile.Public}>, ownerPercentCut: UFix64) {
-			self.owner=owner
-			self.tenant=tenant
-			self.ownerPercentCut=ownerPercentCut
+		init(name: String, platform:Capability<&{Profile.Public}>, minter: Capability<&{Profile.Public}>, platformPercentCut: UFix64) {
+			self.platform=platform
+			self.minter=minter
+			self.platformPercentCut=platformPercentCut
+			self.name=name
 		}
 	}
 
@@ -442,8 +467,8 @@ pub contract GenericNFT: NonFungibleToken {
 	init() {
 		self.forSaleSchemeName="metadata/forSale"
 		self.minterSchemeName="minter"
-		self.minterOwnerSchemeName="minter/Owner"
-		self.minterTenantSchemeName="minter/Tenant"
+		self.minterProfilechemeName="profile/minter"
+		self.platformProfileSchemeName="profile/platform"
 		// Initialize the total supply
 		self.totalSupply = 0
 
