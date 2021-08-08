@@ -15,6 +15,9 @@ transaction() {
 
 		//todo init profile here
 		let profileCap =account.getCapability<&{Profile.Public}>(Profile.publicPath)
+
+		log("profile is name".concat(profileCap.borrow()!.getName()))
+
 		let minter <- admin.createMinter(platform: GenericNFT.MinterPlatform(name: "Example",  owner: profileCap, minter: profileCap, ownerPercentCut: 0.01))
 
 		account.save<@GenericNFT.PagedCollection>(<- GenericNFT.createEmptyPagedCollection(pageSize: 2), to: /storage/nft)
@@ -44,6 +47,9 @@ transaction() {
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art2", schemas: {
 			"editions" : NFTMetadata.Editioned(edition: 3, maxEdition:3)
 		}, sharedData: { "shared/metadata/createiveWork" : sharedPointer}))
+
+
+		publicPagedCollection.mixin(tokenId: 1, schemaName: "test", resolution: "test")
 
 		destroy minter
 	}

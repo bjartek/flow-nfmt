@@ -6,17 +6,30 @@
 		}
 	},
 	"contracts": {
-		"NonFungibleToken" : "./contracts/NonFungibleToken.cdc",
-		"GenericNFT" : "./contracts/GenericNFT.cdc",
-		"Profile" : "./contracts/Profile.cdc",
-		"NFTMetadata" : "./contracts/NFTMetadata.cdc",
+		"FUSD": {
+			"source": "./contracts/FUSD.cdc",
+			"aliases": {
+				"testnet": "0xe223d8a629e49c68"
+			}
+		},
 		"FungibleToken": {
 			"source": "./contracts/FungibleToken.cdc",
 			"aliases": {
 				"testnet": "9a0766d93b6608b7",
 				"emulator": "ee82856bf20e2aa6"
 			}
-		}
+		},
+		"FlowToken": {
+			"source": "./contracts/FlowToken.cdc",
+			"aliases": {
+				"testnet": "0x7e60df042a9c0868",
+				"emulator": "0x0ae53cb6e3f42a79"
+			}
+		},
+		"NonFungibleToken" : "./contracts/NonFungibleToken.cdc",
+		"GenericNFT" : "./contracts/GenericNFT.cdc",
+		"Profile" : "./contracts/Profile.cdc",
+  	"NFTMetadata" : "./contracts/NFTMetadata.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -33,6 +46,7 @@
 		"emulator" : {
 			"emulator-account" : [
 				"NonFungibleToken",
+				"FUSD", 
 				"Profile",
 				"NFTMetadata", 
 				"GenericNFT"

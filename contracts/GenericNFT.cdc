@@ -45,8 +45,9 @@ pub contract GenericNFT: NonFungibleToken {
 
 		init(initID: UInt64, name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
 			for sharedKey in sharedData.keys {
-				assert(sharedKey.length < 8,message:"Is to short, must start with shared/") 
-				assert(sharedKey.slice(from:0, upTo:6) != "shared/", message: "Does not start with shared/")
+				assert(sharedKey.length > 7,message:"Is to short, must start with shared/ is ".concat(sharedKey)) 
+				let slice =sharedKey.slice(from:0, upTo:7)
+				assert(sharedKey.slice(from:0, upTo:7) == "shared/", message: "Does not start with shared/ is".concat(slice))
 			}
 			self.id = initID
 			self.schemas=schemas
@@ -75,12 +76,11 @@ pub contract GenericNFT: NonFungibleToken {
 			}
 
 			if schema == GenericNFT.minterSchemeName {
-				//todo expand plattforms in verbose mode?
 				return self.minterPlatform
 			} else if schema == GenericNFT.minterProfilechemeName {
-				self.minterPlatform.minter.borrow()!.asProfile()
+				return self.minterPlatform.minter.borrow()!.asProfile()
 			} else if schema == GenericNFT.platformProfileSchemeName {
-				self.minterPlatform.platform.borrow()!.asProfile()
+				return self.minterPlatform.platform.borrow()!.asProfile()
 			} else if self.schemas.keys.contains(schema) {
 				return self.schemas[schema]
 			} else if self.sharedData.keys.contains(schema) {
@@ -147,6 +147,44 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 
+		// Could this be added to the standard? That it is possible for the owner of an NFT to mixin things to it after it is created?
+		//Add the posibility for the owner of an NFT to mixin new data to it. Note that it is explicit that this is mixed in and the user that mixed it in
+		pub fun mixin(tokenId: UInt64, schema:String, resolution: AnyStruct) {
+				if self.owner == nil {
+					panic("Must be owned to mixin")
+				}
+
+				let schemaName="mixin/".concat(self.owner!.address.toString()).concat("/").concat(schema)
+
+				if self.ownedNFTs[tokenId] != nil {
+					let ref = &self.ownedNFTs[tokenId] as auth &NonFungibleToken.NFT
+					let nft = ref as! &GenericNFT.NFT
+
+					nft.schemas[schemaName] = resolution
+			} 
+		}
+		
+		// Could this be added to the standard? That it is possible for the owner of an NFT to remove a Mixin things to it after it is created?
+		pub fun removeMixin(tokenId: UInt64, schema:String) {
+				if self.owner == nil {
+					panic("Must be owned to mixin")
+				}
+
+				let schemaName="mixin/".concat(self.owner!.address.toString()).concat("/").concat(schema)
+
+				if self.ownedNFTs[tokenId] != nil {
+					let ref = &self.ownedNFTs[tokenId] as auth &NonFungibleToken.NFT
+					let nft = ref as! &GenericNFT.NFT
+
+					if !nft.getSchemas().contains(schemaName) {
+						panic("Cannot remove mixin")
+					}
+					nft.schemas.remove(key: schemaName)
+			} 
+		}
+
+
+		//TODO: do we need borrowGeneric here?
 		//TODO: add more safety here
 		pub fun changePrice(tokenId: UInt64, price: UFix64) {
 			if self.ownedNFTs[tokenId] != nil {
@@ -283,6 +321,29 @@ pub contract GenericNFT: NonFungibleToken {
 			page.removeForSale(tokenId: tokenId)
 			// Put the Collection back in storage
 			self.pages[pageNumber] <-! page
+
+		}
+
+		pub fun mixin(tokenId:UInt64, schemaName: String, resolution: AnyStruct) {
+			let pageNumber = self.page(tokenId)
+			// Remove the collection
+			let page <- self.pages.remove(key: pageNumber)!
+
+			page.mixin(tokenId:tokenId, schema:schemaName, resolution: resolution)
+			// Put the Collection back in storage
+			self.pages[pageNumber] <-! page
+
+		}
+
+		pub fun removeMixin(tokenId: UInt64, schema:String, resolution: AnyStruct) {
+			let pageNumber = self.page(tokenId)
+			// Remove the collection
+			let page <- self.pages.remove(key: pageNumber)!
+
+			page.removeMixin(tokenId: tokenId, schema: schema)
+			// Put the Collection back in storage
+			self.pages[pageNumber] <-! page
+
 
 		}
 
@@ -472,7 +533,7 @@ pub contract GenericNFT: NonFungibleToken {
 		// Initialize the total supply
 		self.totalSupply = 0
 
-		self.AdminStoragePath = /storage/fusdAdmin
+		self.AdminStoragePath = /storage/genericNFTAdmin
 
 		//Ideally I would not want this here in the same account that owns the contract, hope we can have multiple signers for init contract soon
 		let admin <- create Admin()

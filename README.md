@@ -17,6 +17,7 @@ Take a look at the `transactions/nfmt.cdc` file for information on how to min th
 ## Features
  - provide all schemas for the NFT when you mint
  - provide shared schemas that link to a NFT stored in minter
+  - shared schemas must be design start their scheme name with 'shared/' to avoid confusion  
  - any schema is supported
  - support listing for sale inside the NFT collection
    - platform owner will take small cut off all sales
@@ -29,12 +30,9 @@ Take a look at the `transactions/nfmt.cdc` file for information on how to min th
 
 
 
-
-
 ## TODO:
  - add profile in example 
  - method to filter all nfts on a tenant.
- - add mutated state that others cannor change later
  - discover collections through profile
 
 
