@@ -21,10 +21,15 @@ func main() {
 	parts := strings.Split(urlEnv, "/")
 
 	account := parts[0]
+	if len(parts) == 1 {
+		flow.ScriptFromFile("web3-collections").RawAccountArgument(account).Run()
+		return
+	}
 	publicPath := strings.ReplaceAll(parts[1], "|", "/")
 
 	if len(parts) == 2 {
-		flow.ScriptFromFile("web3-ids").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).Run()
+		//	flow.ScriptFromFile("web3-ids").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).Run()
+		flow.ScriptFromFile("web3-ids-profile").RawAccountArgument(account).StringArgument(publicPath).Run()
 		return
 	}
 	id, err := strconv.ParseUint(parts[2], 10, 64)

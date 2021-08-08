@@ -51,6 +51,17 @@ transaction() {
 
 		publicPagedCollection.mixin(tokenId: 1, schemaName: "test", resolution: "test")
 
+
+		//this is the name we use to look up the nfts not directly in storage. So that is it possible to discover
+		//note that only tings that are stored as this concrete type are discovered. 
+		let profile =account.borrow<&Profile.User>(from:Profile.storagePath)!
+    profile.addCollection(Profile.ResourceCollection( 
+        name: "nft", 
+        collection: account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/nft),
+        type: Type<&{NonFungibleToken.CollectionPublic}>(),
+        tags: ["example", "nft"]))
+		
+
 		destroy minter
 	}
 
