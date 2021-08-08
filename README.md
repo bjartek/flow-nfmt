@@ -38,10 +38,16 @@ Take a look at the `transactions/nfmt.cdc` file for information on how to mint t
 
 ## TODO:
  - add fragments
+  - store nft in shared and link all framents to it
+	- fragments have a count and a total number
+	- when buying more then one fragment you can call `combineFragments` on one with the other. The fragment counter will be increased and the sent in fragment will be burnt.
+  - if a user has all fragments and calls `combineFragment` extract the original NFT from shared and put into his storage and burn the original.
+ - combineFragments must then be called from the collection where you send in all the ids to combine into one 
  - do not store the admin in the same account as the contract. multisign when adding contracts please?
  - create examples on how to set up the minter
  - create example no how to list for sale and buy
  - add unit tests.
  - add events. 
 	 - think carefully about this!
+ - should a GenericNFT be allowed to own a child collection? So that you can create a 'pack' and sell the entire pack.  
 
