@@ -475,7 +475,6 @@ pub contract GenericNFT: NonFungibleToken {
 		pub fun createMinter(platform: MinterPlatform) : @GenericNFT.Minter {
 			return <- create Minter(platform:platform)
 		}
-
 	}
 
 

@@ -7,7 +7,7 @@ They can then mint art and a certain % of sales will go to the owner of the plat
 
 Builds upon the NFT metadata purposal so the web3 style links from below still work. 
 
-Take a look at the `transactions/nfmt.cdc` file for information on how to min things.
+Take a look at the `transactions/nfmt.cdc` file for information on how to mint things.
 
 [NB](NB)! Currently as can be seen in go.mod this needs a local version of flow-cli and cadence. 
 
@@ -15,6 +15,11 @@ Take a look at the `transactions/nfmt.cdc` file for information on how to min th
  - flow-cli is latest with patch in flow-cli-patch
 
 ## Features
+ - setup is done via capability receiver
+  - minter creates a MinterProxy
+	- platform owner creates a Minter and  stores it using a private capability path in his account
+	- he then gives that capability to the MinterProxy
+	- minter can not mintNFTS 
  - provide all schemas for the NFT when you mint
  - provide shared schemas that link to a NFT stored in minter
   - shared schemas must be design start their scheme name with 'shared/' to avoid confusion  
@@ -22,17 +27,21 @@ Take a look at the `transactions/nfmt.cdc` file for information on how to min th
  - support listing for sale inside the NFT collection
    - platform owner will take small cut off all sales
    - buy directly in the collecrion
- - support royalties using the royalties schema
- - discover data through web3 like urls
+   - support royalties using the royalties schema if present
+ - discover data through web3 like urls. requires a Profile
+   - 0xf8d6e0586b0a20c7: name of all &{NonFungible.CollectionPublic} collections in the profile
    - 0xf8d6e0586b0a20c7/art : show all ids
-   - 0xf8d6e0586b0a20c7/art/1 : show all schemas for nft 1
+   - 0xf8d6e0586b0a20c7/art/1 : show all schemas for art 1
    - 0xf8d6e0586b0a20c7/art/1/metadata|royalty: resolve a schema
-
-
+ - support mixin content after NFT is minted. When the owner of an NFT mixes inn content the schema for it is forced to me `mixin/<address>/<name provided>/`
+  - an owner can later remove a mixing but only if he still owns the NFT 
 
 ## TODO:
- - add profile in example 
- - method to filter all nfts on a tenant.
- - discover collections through profile
-
+ - add fragments
+ - do not store the admin in the same account as the contract. multisign when adding contracts please?
+ - create examples on how to set up the minter
+ - create example no how to list for sale and buy
+ - add unit tests.
+ - add events. 
+	 - think carefully about this!
 
