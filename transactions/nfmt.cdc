@@ -10,7 +10,7 @@ transaction() {
 
 		let admin=account.borrow<&GenericNFT.Admin>(from: GenericNFT.AdminStoragePath)!
 
-		account.save<@GenericNFT.PagedCollection>(<- GenericNFT.createEmptyPagedCollection(pageSize: 2), to: /storage/sharedContent)
+		account.save<@NonFungibleToken.Collection>(<- GenericNFT.createEmptyCollection(), to: /storage/sharedContent)
 		account.link<&{GenericNFT.CollectionPublic}>(/private/sharedContent, target: /storage/sharedContent)
 
 		//todo init profile here
@@ -20,7 +20,7 @@ transaction() {
 
 		let minter <- admin.createMinter(platform: GenericNFT.MinterPlatform(name: "Example",  owner: profileCap, minter: profileCap, ownerPercentCut: 0.01))
 
-		account.save<@GenericNFT.PagedCollection>(<- GenericNFT.createEmptyPagedCollection(pageSize: 2), to: /storage/nft)
+		account.save<@NonFungibleToken.Collection>(<- GenericNFT.createEmptyCollection(), to: /storage/nft)
 		account.link<&{NonFungibleToken.CollectionPublic}>(/public/nft, target: /storage/nft)
 		account.link<&{GenericNFT.CollectionPublic}>(/public/paged, target: /storage/nft)
 
@@ -33,7 +33,7 @@ transaction() {
 
 		sharedContentCap.borrow()!.deposit(token: <- sharedNFT)
 
-		let publicPagedCollection=account.borrow<&GenericNFT.PagedCollection>(from: /storage/nft)!
+		let publicPagedCollection=account.borrow<&GenericNFT.Collection>(from: /storage/nft)!
 
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art0", schemas: {
 			"editions" : NFTMetadata.Editioned(edition: 1, maxEdition:3) 
@@ -49,7 +49,7 @@ transaction() {
 		}, sharedData: { "shared/metadata/createiveWork" : sharedPointer}))
 
 
-		publicPagedCollection.mixin(tokenId: 1, schemaName: "test", resolution: "test")
+		publicPagedCollection.mixin(tokenId: 1, schema: "test", resolution: "test")
 
 
 		//this is the name we use to look up the nfts not directly in storage. So that is it possible to discover
