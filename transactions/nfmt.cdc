@@ -34,19 +34,20 @@ transaction() {
 		sharedContentCap.borrow()!.deposit(token: <- sharedNFT)
 
 		let publicPagedCollection=account.borrow<&GenericNFT.Collection>(from: /storage/nft)!
+		let sharedData={ "shared/metadata/creativeWork" : sharedPointer}
 
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art0", schemas: {
 			"editions" : NFTMetadata.Editioned(edition: 1, maxEdition:3) 
-		}, sharedData: { "shared/metadata/createiveWork" : sharedPointer}))
+		}, sharedData: sharedData))
 
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art1", schemas: {
 			"editions" : NFTMetadata.Editioned(edition: 2, maxEdition:3)
-		}, sharedData: { "shared/metadata/createiveWork" : sharedPointer}))
+		}, sharedData: sharedData))
 
 
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art2", schemas: {
 			"editions" : NFTMetadata.Editioned(edition: 3, maxEdition:3)
-		}, sharedData: { "shared/metadata/createiveWork" : sharedPointer}))
+		}, sharedData: sharedData))
 
 
 		publicPagedCollection.mixin(tokenId: 1, schema: "test", resolution: "test")
@@ -55,16 +56,16 @@ transaction() {
 		//this is the name we use to look up the nfts not directly in storage. So that is it possible to discover
 		//note that only tings that are stored as this concrete type are discovered. 
 		let profile =account.borrow<&Profile.User>(from:Profile.storagePath)!
-    profile.addCollection(Profile.ResourceCollection( 
-        name: "nft", 
-        collection: account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/nft),
-        type: Type<&{NonFungibleToken.CollectionPublic}>(),
-        tags: ["example", "nft"]))
-		
+		profile.addCollection(Profile.ResourceCollection( 
+			name: "nft", 
+			collection: account.getCapability<&{NonFungibleToken.CollectionPublic}>(/public/nft),
+			type: Type<&{NonFungibleToken.CollectionPublic}>(),
+			tags: ["example", "nft"]))
 
-		destroy minter
+
+			destroy minter
+		}
+
 	}
-
-}
 
 
