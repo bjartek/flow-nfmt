@@ -71,8 +71,8 @@ pub contract GenericNFT: NonFungibleToken {
 
 		//Note that when resolving schemas shared data are loaded last, so use schema names that are unique. ie prefix with shared/ or something
 		pub fun resolveSchema(_ schema: String): AnyStruct {
-			if !self.getSchemas().contains(schema) {
-				panic("Cannot resolve for unknown schema")
+			pre {
+				self.getSchemas().contains(schema) : "Cannot resolve unknown schema"
 			}
 
 			if schema == GenericNFT.minterSchemeName {
