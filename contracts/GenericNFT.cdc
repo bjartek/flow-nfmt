@@ -45,9 +45,10 @@ pub contract GenericNFT: NonFungibleToken {
 
 		init(initID: UInt64, name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
 			for sharedKey in sharedData.keys {
-				assert(sharedKey.length > 7,message:"Is to short, must start with shared/ is ".concat(sharedKey)) 
-				let slice =sharedKey.slice(from:0, upTo:7)
-				assert(sharedKey.slice(from:0, upTo:7) == "shared/", message: "Does not start with shared/ is".concat(slice))
+				let length=sharedKey.length
+				assert(length > 7,message:"Is to short, must end with  |shared is ".concat(sharedKey)) 
+				let slice =sharedKey.slice(from:length-7, upTo:length)
+				assert(slice == "|shared", message: "Does not end with |shared is".concat(slice))
 			}
 			self.id = initID
 			self.schemas=schemas
@@ -154,7 +155,7 @@ pub contract GenericNFT: NonFungibleToken {
 					panic("Must be owned to mixin")
 				}
 
-				let schemaName="mixin/".concat(self.owner!.address.toString()).concat("/").concat(schema)
+				let schemaName=schema.concat("|mixin|").concat(self.owner!.address.toString())
 
 				if self.ownedNFTs[tokenId] != nil {
 					let ref = &self.ownedNFTs[tokenId] as auth &NonFungibleToken.NFT
@@ -170,7 +171,7 @@ pub contract GenericNFT: NonFungibleToken {
 					panic("Must be owned to mixin")
 				}
 
-				let schemaName="mixin/".concat(self.owner!.address.toString()).concat("/").concat(schema)
+				let schemaName=schema.concat("|mixin|").concat(self.owner!.address.toString())
 
 				if self.ownedNFTs[tokenId] != nil {
 					let ref = &self.ownedNFTs[tokenId] as auth &NonFungibleToken.NFT
@@ -228,8 +229,8 @@ pub contract GenericNFT: NonFungibleToken {
 			}
 
 
-			if schemas.contains("metadata/royalties") {
-				let royalties = nft.resolveSchema("metadata/royalties") as! NFTMetadata.Royalties
+			if schemas.contains("0xf8d6e0586b0a20c7.NFTMetadata.Royalties") {
+				let royalties = nft.resolveSchema("0xf8d6e0586b0a20c7.NFTMetadata.Royalties") as! NFTMetadata.Royalties
 				for royalty in royalties.royalty {
 
 					if let receiver = royalty.wallet.borrow() {
@@ -375,10 +376,10 @@ pub contract GenericNFT: NonFungibleToken {
 	}
 
 	init() {
-		self.forSaleSchemeName="metadata/forSale"
-		self.minterSchemeName="minter"
-		self.minterProfilechemeName="profile/minter"
-		self.platformProfileSchemeName="profile/platform"
+		self.forSaleSchemeName="0xf8d6e0586b0a20c7.NFTMetadata.ForSale|forSale"
+		self.minterSchemeName="string|minterName"
+		self.minterProfilechemeName="0xf8d6e0586b0a20c7.Profile.UserProfile|minterProfile"
+		self.platformProfileSchemeName="0xf8d6e0586b0a20c7.Profile.UserProfile|platformProfile"
 		// Initialize the total supply
 		self.totalSupply = 0
 

@@ -34,23 +34,23 @@ transaction() {
 		sharedContentCap.borrow()!.deposit(token: <- sharedNFT)
 
 		let publicPagedCollection=account.borrow<&GenericNFT.Collection>(from: /storage/nft)!
-		let sharedData={ "shared/metadata/creativeWork" : sharedPointer}
-
+		let sharedData={ "0xf8d6e0586b0a20c7.NFTMetadata.CreativeWork|shared" : sharedPointer}
+	  let editionsSchemeName="0xf8d6e0586b0a20c7.NFTMetadata.Editions"
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art0", schemas: {
-			"editions" : NFTMetadata.Editioned(edition: 1, maxEdition:3) 
+			editionsSchemeName : NFTMetadata.Editioned(edition: 1, maxEdition:3) 
 		}, sharedData: sharedData))
 
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art1", schemas: {
-			"editions" : NFTMetadata.Editioned(edition: 2, maxEdition:3)
+			editionsSchemeName: NFTMetadata.Editioned(edition: 2, maxEdition:3)
 		}, sharedData: sharedData))
 
 
 		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art2", schemas: {
-			"editions" : NFTMetadata.Editioned(edition: 3, maxEdition:3)
+			editionsSchemeName : NFTMetadata.Editioned(edition: 3, maxEdition:3)
 		}, sharedData: sharedData))
 
 
-		publicPagedCollection.mixin(tokenId: 1, schema: "test", resolution: "test")
+		publicPagedCollection.mixin(tokenId: 1, schema: "string|signature", resolution: "Bjarte")
 
 
 		//this is the name we use to look up the nfts not directly in storage. So that is it possible to discover
