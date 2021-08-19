@@ -29,7 +29,7 @@ transaction() {
 		let creativeWork=NFTMetadata.CreativeWork(artist: "Bjarte", name: "GenericNFT", description:"This is a shared content schema that will be stored with the tenant and shared with all editions or similar kind of constructs", type: "Text"  )
 		let sharedNFT <- minter.mintNFT(name: "Art", schemas: { "creativeWork" : creativeWork}, sharedData: {})
 
-		let sharedPointer= GenericNFT.SchemaPointer(collection: sharedContentCap, id: sharedNFT.id, schema: "creativeWork")
+		let sharedPointer= GenericNFT.SchemaPointer(collection: sharedContentCap, id: sharedNFT.uuid, schema: "creativeWork")
 
 		sharedContentCap.borrow()!.deposit(token: <- sharedNFT)
 

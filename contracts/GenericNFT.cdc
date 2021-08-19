@@ -28,29 +28,26 @@ pub contract GenericNFT: NonFungibleToken {
 	pub let minterProfilechemeName : String
 	pub let platformProfileSchemeName : String
 
-	pub var totalSupply: UInt64
 
 	pub event ContractInitialized()
-	pub event Withdraw(id: UInt64, from: Address?)
+	pub event Withdraw(id: UInt64, from: Address?, to: Address?)
 	pub event Deposit(id: UInt64, to: Address?)
 	pub event Editioned(id: UInt64, from: UInt64, edition: UInt64, maxEdition: UInt64)
 
 
-	pub resource NFT: NonFungibleToken.INFT {
-		pub let id: UInt64
+	pub resource NFT  {
 		access(contract) let schemas: {String : AnyStruct}
 		access(contract) let sharedData: {String : SchemaPointer}
 		access(contract) let name: String
 		access(contract) let minterPlatform: MinterPlatform
 
-		init(initID: UInt64, name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
+		init(name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
 			for sharedKey in sharedData.keys {
 				let length=sharedKey.length
 				assert(length > 7,message:"Is to short, must end with  |shared is ".concat(sharedKey)) 
 				let slice =sharedKey.slice(from:length-7, upTo:length)
 				assert(slice == "|shared", message: "Does not end with |shared is".concat(slice))
 			}
-			self.id = initID
 			self.schemas=schemas
 			self.name=name
 			self.sharedData=sharedData
@@ -113,12 +110,12 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 		// withdraw removes an NFT from the collection and moves it to the caller
-		pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
+		pub fun withdraw(withdrawID: UInt64, target: Capability<&{NonFungibleToken.Receiver}>) {
 			let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
 
-			emit Withdraw(id: token.id, from: self.owner?.address)
+			emit Withdraw(id: token.uuid, from: self.owner?.address, to: target.address)
 
-			return <-token
+			target.borrow()!.deposit(token: <- token)
 		}
 
 		// deposit takes a NFT and adds it to the collections dictionary
@@ -126,7 +123,7 @@ pub contract GenericNFT: NonFungibleToken {
 		pub fun deposit(token: @NonFungibleToken.NFT) {
 			let token <- token as! @GenericNFT.NFT
 
-			let id: UInt64 = token.id
+			let id: UInt64 = token.uuid
 
 			// add the new token to the dictionary which removes the old one
 			let oldToken <- self.ownedNFTs[id] <- token
@@ -214,7 +211,7 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 		pub fun purchase(tokenId: UInt64, vault: @FungibleToken.Vault, target: Capability<&{NonFungibleToken.Receiver}>) {
-			let nft <-  self.withdraw(withdrawID:tokenId)
+			let nft = self.borrowNFT(id: tokenId)
 
 			let schemas = nft.getSchemas()
 			if !schemas.contains(GenericNFT.forSaleSchemeName) {
@@ -247,7 +244,6 @@ pub contract GenericNFT: NonFungibleToken {
 				}
 			}
 
-
 			//the owner of the generic NFT plattform can take a cut
 			let minter = nft.resolveSchema(GenericNFT.minterSchemeName) as! MinterPlatform 
 			let platformOwnerCut=salePrice * minter.platformPercentCut
@@ -259,8 +255,8 @@ pub contract GenericNFT: NonFungibleToken {
 			//deposit rest of money
 			forSale.wallet.borrow()!.deposit(from: <- vault)
 
-			//deposit the NFT
-			target.borrow()!.deposit(token: <- nft)
+			//withdraw the token to the target
+			self.withdraw(withdrawID: tokenId, target: target)
 
 			//TODO: error handling
 		}
@@ -279,8 +275,7 @@ pub contract GenericNFT: NonFungibleToken {
 
 
 		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}) : @GenericNFT.NFT {
-			let nft <-  create NFT(initID: GenericNFT.totalSupply, name: name, schemas:schemas, sharedData:sharedData, minterPlatform: self.platform)
-			GenericNFT.totalSupply = GenericNFT.totalSupply + 1
+			let nft <-  create NFT(name: name, schemas:schemas, sharedData:sharedData, minterPlatform: self.platform)
 			return <-  nft
 		}
 
@@ -381,7 +376,6 @@ pub contract GenericNFT: NonFungibleToken {
 		self.minterProfilechemeName="0xf8d6e0586b0a20c7.Profile.UserProfile|minterProfile"
 		self.platformProfileSchemeName="0xf8d6e0586b0a20c7.Profile.UserProfile|platformProfile"
 		// Initialize the total supply
-		self.totalSupply = 0
 
 		self.AdminStoragePath = /storage/genericNFTAdmin
 
