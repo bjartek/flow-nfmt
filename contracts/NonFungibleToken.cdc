@@ -69,12 +69,12 @@ pub contract interface NonFungibleToken {
 		pub fun getName(): String {
 			return ""
 		}
-		pub fun getSchemas() : [String] {
-			return []
+		pub fun getSchemas() : {String: Type} {
+			return {}
 		}
 		pub fun resolveSchema(_ schema:String): AnyStruct {
 			pre {
-				self.getSchemas().contains(schema) : "Cannot resolve unknown schema"
+				self.getSchemas().keys.contains(schema) : "Cannot resolve unknown schema"
 			}
 
 			return nil

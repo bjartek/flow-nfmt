@@ -1,7 +1,7 @@
 import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
 
 
-pub fun main(address: Address, path: PublicPath, id: UInt64) : [String] {
+pub fun main(address: Address, path: PublicPath, id: UInt64) : {String: Type} {
 
 let account=getAccount(address)
   return  getAccount(address)
