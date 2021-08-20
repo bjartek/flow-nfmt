@@ -121,7 +121,7 @@ pub contract GenericNFT: NonFungibleToken {
 	pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, CollectionPublic {
 		// dictionary of NFT conforming tokens
 		// NFT is a resource type with an `UInt64` ID field
-		pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
+		access(contract) var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
 		init () {
 			self.ownedNFTs <- {}

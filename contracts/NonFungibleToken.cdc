@@ -114,7 +114,7 @@ pub contract interface NonFungibleToken {
 	pub resource Collection: Provider, Receiver, CollectionPublic {
 
 		// Dictionary to hold the NFTs in the Collection
-		pub var ownedNFTs: @{UInt64: NFT}
+		access(contract) var ownedNFTs: @{UInt64: NFT}
 
 		// withdraw removes an NFT from the collection and moves it to the caller
 		pub fun withdraw(withdrawID: UInt64, target: Capability<&{Receiver}>)

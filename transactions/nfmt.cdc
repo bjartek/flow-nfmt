@@ -51,7 +51,7 @@ transaction() {
 		  sharedData: sharedData))
 
 
-			publicPagedCollection.mixin(tokenId: 1, schema: "string|signature", resolution: "Bjarte", type: Type<String>())
+			publicPagedCollection.mixin(tokenId: 23, schema: "signature", resolution: "Bjarte", type: Type<String>())
 
 
 		//this is the name we use to look up the nfts not directly in storage. So that is it possible to discover
