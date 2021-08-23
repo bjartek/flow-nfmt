@@ -55,7 +55,10 @@ pub contract interface NonFungibleToken {
 	//
 	// If the collection is not in an account's storage, `from` will be `nil`.
 	//
-	pub event Withdraw(id: UInt64, from: Address?, to: Address?)
+	pub event Withdraw(id: UInt64, from: Address?)
+
+	// event that is emitted when ft is transfered from one account to another
+	pub event Transfer(id: UInt64, from: Address?, to: Address?)
 
 	// Event that emitted when a token is deposited to a collection.
 	//
@@ -66,15 +69,18 @@ pub contract interface NonFungibleToken {
 	// Requirement that all conforming NFT smart contracts have
 	// to define a resource called NFT that conforms to INFT
 	pub resource NFT {
-		pub fun getName(): String {
-			return ""
-		}
-		pub fun getSchemas() : {String: Type} {
+		pub fun getViews() : {String: Type} {
 			return {}
 		}
-		pub fun resolveSchema(_ schema:String): AnyStruct {
+
+		pub fun getViewNames(_ type: Type): [String] {
+	   return []
+		}
+
+
+		pub fun resolveView(_ schema:String): AnyStruct {
 			pre {
-				self.getSchemas().keys.contains(schema) : "Cannot resolve unknown schema"
+				self.getViews().keys.contains(schema) : "Cannot resolve unknown schema"
 			}
 
 			return nil
@@ -88,7 +94,9 @@ pub contract interface NonFungibleToken {
 	pub resource interface Provider {
 		// withdraw removes an NFT from the collection and moves it to the caller
 
-		pub fun withdraw(withdrawID: UInt64, target: Capability<&{Receiver}>)
+		pub fun withdraw(withdrawID: UInt64) : @NonFungibleToken.NFT
+
+		pub fun transfer(withdrawID: UInt64, target: Capability<&{Receiver}>)
 	}
 
 	// Interface to mediate deposits to the Collection
@@ -116,8 +124,11 @@ pub contract interface NonFungibleToken {
 		// Dictionary to hold the NFTs in the Collection
 		access(contract) var ownedNFTs: @{UInt64: NFT}
 
-		// withdraw removes an NFT from the collection and moves it to the caller
-		pub fun withdraw(withdrawID: UInt64, target: Capability<&{Receiver}>)
+		//withdraw an NFT
+		pub fun withdraw(withdrawID: UInt64) : @NonFungibleToken.NFT
+
+		//transfer an NFT
+		pub fun transfer(withdrawID: UInt64, target: Capability<&{Receiver}>)
 
 		// deposit takes a NFT and adds it to the collections dictionary
 		// and adds the ID to the id array
