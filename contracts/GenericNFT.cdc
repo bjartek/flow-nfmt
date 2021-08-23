@@ -304,6 +304,7 @@ pub contract GenericNFT: NonFungibleToken {
 
 		init(platform: MinterPlatform) {
 			self.platform=platform
+		}
 
 
 		pub fun mintNFT(name: String, views: {String: View}, sharedData: {String: ViewPointer}) : @GenericNFT.NFT {

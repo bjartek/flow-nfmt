@@ -27,9 +27,9 @@ transaction() {
 		let sharedContentCap =account.getCapability<&{GenericNFT.CollectionPublic}>(/private/sharedContent)
 
 		let creativeWork=NFTMetadata.CreativeWork(artist: "Bjarte", name: "GenericNFT", description:"This is a shared content schema that will be stored with the tenant and shared with all editions or similar kind of constructs", type: "Text"  )
-		let sharedNFT <- minter.mintNFT(name: "Art", schemas: { "creativeWork" : GenericNFT.Schema(type: Type<NFTMetadata.CreativeWork>(), value: creativeWork)}, sharedData: {})
+		let sharedNFT <- minter.mintNFT(name: "Art", views: { "creativeWork" : GenericNFT.View(type: Type<NFTMetadata.CreativeWork>(), value: creativeWork)}, sharedData: {})
 
-		let sharedPointer= GenericNFT.SchemaPointer(collection: sharedContentCap, id: sharedNFT.uuid, schema: "creativeWork", type: Type<NFTMetadata.CreativeWork>())
+		let sharedPointer= GenericNFT.ViewPointer(collection: sharedContentCap, id: sharedNFT.uuid, schema: "creativeWork", type: Type<NFTMetadata.CreativeWork>())
 
 		sharedContentCap.borrow()!.deposit(token: <- sharedNFT)
 
@@ -37,21 +37,21 @@ transaction() {
 		let sharedData={ "creativeWork|shared" : sharedPointer}
 	  let editionsSchemeName="editions"
 
-		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art0", schemas: {
-			editionsSchemeName : GenericNFT.Schema(type: Type<NFTMetadata.Editioned>(), value: NFTMetadata.Editioned(edition: 1, maxEdition:3) )}, 
+		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art0", views: {
+			editionsSchemeName : GenericNFT.View(type: Type<NFTMetadata.Editioned>(), value: NFTMetadata.Editioned(edition: 1, maxEdition:3) )}, 
 			sharedData: sharedData))
 
-		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art1", schemas: {
-			editionsSchemeName : GenericNFT.Schema(type: Type<NFTMetadata.Editioned>(), value: NFTMetadata.Editioned(edition: 2, maxEdition:3) )}, 
+		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art1", views: {
+			editionsSchemeName : GenericNFT.View(type: Type<NFTMetadata.Editioned>(), value: NFTMetadata.Editioned(edition: 2, maxEdition:3) )}, 
 		  sharedData: sharedData))
 
 
-		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art2", schemas: {
-			editionsSchemeName : GenericNFT.Schema(type: Type<NFTMetadata.Editioned>(), value: NFTMetadata.Editioned(edition: 3, maxEdition:3) )}, 
+		publicPagedCollection.deposit(token:  <- minter.mintNFT(name: "test art2", views: {
+			editionsSchemeName : GenericNFT.View(type: Type<NFTMetadata.Editioned>(), value: NFTMetadata.Editioned(edition: 3, maxEdition:3) )}, 
 		  sharedData: sharedData))
 
 
-			publicPagedCollection.mixin(tokenId: 23, schema: "signature", resolution: "Bjarte", type: Type<String>())
+			publicPagedCollection.mixin(tokenId: 23, view: "signature", resolution: "Bjarte", type: Type<String>())
 
 
 		//this is the name we use to look up the nfts not directly in storage. So that is it possible to discover

@@ -8,7 +8,7 @@ let account=getAccount(address)
    .getCapability(path)
    .borrow<&{NonFungibleToken.CollectionPublic}>()!
    .borrowNFT(id: id)
-   .getSchemas()
+   .getViews()
 
 }
 
