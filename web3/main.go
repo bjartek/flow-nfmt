@@ -25,7 +25,7 @@ func main() {
 		flow.ScriptFromFile("web3-collections").RawAccountArgument(account).Run()
 		return
 	}
-	publicPath := strings.ReplaceAll(parts[1], "|", "/")
+	publicPath := parts[1]
 
 	if len(parts) == 2 {
 		//	flow.ScriptFromFile("web3-ids").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).Run()
@@ -44,7 +44,10 @@ func main() {
 	if len(parts) != 4 {
 		panic("Invalid formed web3 url for flow format is <account>/<path|subpath...>/<id>/<scheme|subscheme...>")
 	}
-	scheme := strings.ReplaceAll(parts[3], "|", "/")
+	scheme := parts[3]
+	//how do i create a type from a string value in go?
 
-	flow.ScriptFromFile("web3").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).UInt64Argument(id).StringArgument(scheme).Run()
+  //todo; How am I supposed to create the type here
+	typ := ??
+	flow.ScriptFromFile("web3").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).UInt64Argument(id).Argument(typ).Run()
 }

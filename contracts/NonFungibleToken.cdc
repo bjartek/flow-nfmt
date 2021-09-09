@@ -71,39 +71,23 @@ pub contract interface NonFungibleToken {
 	pub resource interface INFT {
 		// The unique ID that each NFT has
 		pub let id: UInt64
-		pub fun getName(): String {
-			return ""
-		}
-
-		pub fun getSchemas() : [String] {
+		pub fun getViews() : [Type] {
 			return []
 		}
-
-		pub fun resolveSchema(_ schema:String): AnyStruct {
-			pre {
-				self.getSchemas().contains(schema) : "Cannot resolve unknown schema"
-			}
-
+		pub fun resolveView(_ view:Type): AnyStruct? {
 			return nil
 		}
-
 	}
 
 	// Requirement that all conforming NFT smart contracts have
 	// to define a resource called NFT that conforms to INFT
 	pub resource NFT: INFT {
 		pub let id: UInt64
-		pub fun getName(): String {
-			return ""
-		}
-		pub fun getSchemas() : [String] {
+		pub fun getViews() : [Type] {
 			return []
 		}
-		pub fun resolveSchema(_ schema:String): AnyStruct {
-			pre {
-				self.getSchemas().contains(schema) : "Cannot resolve unknown schema"
-			}
 
+		pub fun resolveView(_ view:Type): AnyStruct? {
 			return nil
 		}
 

@@ -36,14 +36,24 @@ pub contract GenericNFT: NonFungibleToken {
 	pub event Editioned(id: UInt64, from: UInt64, edition: UInt64, maxEdition: UInt64)
 
 
+	pub struct ViewInfo {
+		access(contract) let typ: Type
+		access(contract) let result: AnyStruct
+
+		init(typ:Type, result:AnyStruct) {
+			self.typ=typ
+			self.result=result
+		}
+	}
+
 	pub resource NFT: NonFungibleToken.INFT {
 		pub let id: UInt64
-		access(contract) let schemas: {String : AnyStruct}
+		access(contract) let schemas: {String : ViewInfo}
 		access(contract) let sharedData: {String : SchemaPointer}
 		access(contract) let name: String
 		access(contract) let minterPlatform: MinterPlatform
 
-		init(initID: UInt64, name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
+		init(initID: UInt64, name: String, schemas: {String: ViewInfo}, sharedData: {String: SchemaPointer}, minterPlatform: MinterPlatform) {
 			for sharedKey in sharedData.keys {
 				let length=sharedKey.length
 				assert(length > 7,message:"Is to short, must end with  |shared is ".concat(sharedKey)) 
@@ -57,25 +67,30 @@ pub contract GenericNFT: NonFungibleToken {
 			self.minterPlatform=minterPlatform
 		}
 
-		pub fun getName() : String {
-			return self.name
-		}
+		pub fun getViews() : [Type] {
 
-		pub fun getSchemas() : [String] {
+			var views : [Type]=[]
+			for s in self.schemas.keys {
+				views.append(self.schemas[s]!.typ)
+
+			}
+			return views
+
+			/*
 			var schema= self.schemas.keys
 			schema.appendAll(self.sharedData.keys)
 			schema.append(GenericNFT.minterSchemeName)
 			schema.append(GenericNFT.minterProfilechemeName)
 			schema.append(GenericNFT.platformProfileSchemeName)
 			return schema
+			*/
 		}
 
 		//Note that when resolving schemas shared data are loaded last, so use schema names that are unique. ie prefix with shared/ or something
-		pub fun resolveSchema(_ schema: String): AnyStruct {
-			pre {
-				self.getSchemas().contains(schema) : "Cannot resolve unknown schema"
-			}
+		pub fun resolveViews(_ type: Type): AnyStruct {
+			return self.schemas[type.identifier]?.result
 
+			/*
 			if schema == GenericNFT.minterSchemeName {
 				return self.minterPlatform
 			} else if schema == GenericNFT.minterProfilechemeName {
@@ -89,6 +104,7 @@ pub contract GenericNFT: NonFungibleToken {
 			}
 
 			return ""
+			*/
 		}
 
 	}
@@ -99,7 +115,7 @@ pub contract GenericNFT: NonFungibleToken {
 		pub fun deposit(token: @NonFungibleToken.NFT)
 		pub fun getIDs(): [UInt64]
 		pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-		pub fun purchase(tokenId: UInt64, vault: @FungibleToken.Vault, target: Capability<&{NonFungibleToken.Receiver}>)
+//		pub fun purchase(tokenId: UInt64, vault: @FungibleToken.Vault, target: Capability<&{NonFungibleToken.Receiver}>)
 
 	}
 
@@ -148,6 +164,7 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 
+		/*
 		// Could this be added to the standard? That it is possible for the owner of an NFT to mixin things to it after it is created?
 		//Add the posibility for the owner of an NFT to mixin new data to it. Note that it is explicit that this is mixed in and the user that mixed it in
 		pub fun mixin(tokenId: UInt64, schema:String, resolution: AnyStruct) {
@@ -165,7 +182,7 @@ pub contract GenericNFT: NonFungibleToken {
 			} 
 		}
 		
-		// Could this be added to the standard? That it is possible for the owner of an NFT to remove a Mixin things to it after it is created?
+		/// Could this be added to the standard? That it is possible for the owner of an NFT to remove a Mixin things to it after it is created?
 		pub fun removeMixin(tokenId: UInt64, schema:String) {
 				if self.owner == nil {
 					panic("Must be owned to mixin")
@@ -264,6 +281,7 @@ pub contract GenericNFT: NonFungibleToken {
 
 			//TODO: error handling
 		}
+		*/
 		destroy() {
 			destroy self.ownedNFTs
 		}
@@ -278,8 +296,13 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 
-		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}) : @GenericNFT.NFT {
-			let nft <-  create NFT(initID: GenericNFT.totalSupply, name: name, schemas:schemas, sharedData:sharedData, minterPlatform: self.platform)
+		pub fun mintNFT(name: String, schemas: [AnyStruct], sharedData: {String: SchemaPointer}) : @GenericNFT.NFT {
+			let views : {String: ViewInfo} = {}
+			for s in schemas {
+				views[s.getType().identifier]=ViewInfo(typ:s.getType(), result: s)
+			}
+	
+			let nft <-  create NFT(initID: GenericNFT.totalSupply, name: name, schemas:views, sharedData:sharedData, minterPlatform: self.platform)
 			GenericNFT.totalSupply = GenericNFT.totalSupply + 1
 			return <-  nft
 		}
@@ -307,10 +330,8 @@ pub contract GenericNFT: NonFungibleToken {
 			self.minterCapability = cap
 		}
 
-		pub fun mintNFT(name: String, schemas: {String: AnyStruct}, sharedData: {String: SchemaPointer}): @GenericNFT.NFT {
-			return <- self.minterCapability!
-			.borrow()!
-			.mintNFT(name: name, schemas: schemas, sharedData: sharedData)
+		pub fun mintNFT(name: String, schemas: [AnyStruct], sharedData: {String: SchemaPointer}): @GenericNFT.NFT {
+			return <- self.minterCapability!.borrow()!.mintNFT(name: name, schemas: schemas, sharedData: sharedData)
 		}
 
 		init() {
@@ -352,7 +373,9 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 		pub fun resolve() : AnyStruct {
-			return self.collection.borrow()!.borrowNFT(id: self.id).resolveSchema(self.scheme)
+			return nil
+//			return self.collection.borrow()!.borrowNFT(id: self.id).resolveSchema(self.scheme)
+		
 		}
 	}
 

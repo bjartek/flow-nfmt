@@ -1,14 +1,14 @@
 import NonFungibleToken from "../contracts/NonFungibleToken.cdc"
 
 
-pub fun main(address: Address, path: PublicPath, id: UInt64, schema: String) : AnyStruct {
+pub fun main(address: Address, path: PublicPath, id: UInt64, schema: Type) : AnyStruct {
 
 let account=getAccount(address)
   return  getAccount(address)
    .getCapability(path)
    .borrow<&{NonFungibleToken.CollectionPublic}>()!
    .borrowNFT(id: id)
-   .resolveSchema(schema)
+   .resolveView(schema)
 
 }
 
