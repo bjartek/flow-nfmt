@@ -44,10 +44,10 @@ func main() {
 	if len(parts) != 4 {
 		panic("Invalid formed web3 url for flow format is <account>/<path|subpath...>/<id>/<scheme|subscheme...>")
 	}
-	scheme := parts[3]
+	//	scheme := parts[3]
 	//how do i create a type from a string value in go?
 
-  //todo; How am I supposed to create the type here
-	typ := ??
-	flow.ScriptFromFile("web3").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).UInt64Argument(id).Argument(typ).Run()
+	//todo; How am I supposed to create the type here
+	//typ := ??
+	flow.ScriptFromFile("web3").RawAccountArgument(account).Argument(cadence.Path{Domain: "public", Identifier: publicPath}).UInt64Argument(id).Run() //.Argument(typ).Run()
 }

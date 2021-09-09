@@ -87,7 +87,9 @@ pub contract GenericNFT: NonFungibleToken {
 		}
 
 		//Note that when resolving schemas shared data are loaded last, so use schema names that are unique. ie prefix with shared/ or something
-		pub fun resolveViews(_ type: Type): AnyStruct {
+		pub fun resolveView(_ type: Type): AnyStruct {
+			log(type)
+			log(type.identifier)
 			return self.schemas[type.identifier]?.result
 
 			/*
